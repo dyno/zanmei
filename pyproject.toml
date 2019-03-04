@@ -1,0 +1,42 @@
+[tool.poetry]
+name = "hymns"
+version = "0.0.2"
+description = "Download all resources for 'Hymns for God's People'"
+authors = ["Dyno Fu <dyno.fu@gmail.com>"]
+
+[tool.poetry.dependencies]
+absl-py = "*"
+aiodns = "*"
+aiohttp = "*"
+attrs = "*"
+bs4 = "*"
+cattrs = "*"
+cchardet = "*"
+requests = "*"
+tqdm = "*"
+
+
+[tool.poetry.dev-dependencies]
+pytest = "*"
+
+[tool.black]
+line-length = 120
+py36 = true
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.cache
+  | \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.pytest_cache
+  | \.ropeproject
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''

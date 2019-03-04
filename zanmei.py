@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # vim: set fileencoding=utf-8 :
+
 import re
 import shutil
 from pathlib import Path
@@ -8,15 +9,16 @@ from typing import Dict
 
 import attr
 import requests
-from absl import app
-from absl import logging as log
+from absl import app, logging as log
 from bs4 import BeautifulSoup
 
-# 教会圣诗 Hymns for God's People
+from comm import init_logging
+
+# 教會聖詩 Hymns for God's People
 HYMNS_INDEX_URL = "https://www.zanmeishi.com/songbook/hymns-for-gods-people.html"
 ZANMEI_HOMEPAGE = "https://www.zanmeishi.com"
 
-DOWNLOAD = Path("download")
+DOWNLOAD = Path("download/zanmei")
 
 
 @attr.s
@@ -72,6 +74,7 @@ def verify(filepath: Path, glob: str, total: int):
 def main(argv):
     del argv
     DOWNLOAD.mkdir(exist_ok=True, parents=True)
+    init_logging()
     hymns = list(index(HYMNS_INDEX_URL))
     for hymn in hymns:
         try:
