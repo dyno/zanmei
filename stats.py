@@ -17,6 +17,8 @@ def all_titles():
     d = {}
     for _, _, files in os.walk(DOWNLOAD / "zanmei"):
         for filename in files:
+            if not filename.endswith(".png"):
+                continue
             idx, name = filename.split("_", 1)
             d[idx] = name[:-4]  # .png
 
