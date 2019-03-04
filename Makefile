@@ -19,6 +19,10 @@ hoctoga:
 hoc5:
 	$(PYTHON) hoc5.py -v 1
 
+.PHONY: stats
+stats:
+	$(PYTHON) stats.py -v 1
+
 poetry-install:
 	poetry install
 
