@@ -73,6 +73,7 @@ async def index(session: ClientSession, url: str) -> List[Hymn]:
             .replace("隻", "只")
             .replace("麯", "曲")
             .replace("籍我", "藉我")
+            .replace("神跡", "神蹟")
         )
         hymn = Hymn(name=name, no=int(no), url=f"{ZANMEI_HOMEPAGE}{li.a['href']}")
         hymns.append(hymn)
