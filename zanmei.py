@@ -6,6 +6,7 @@ import asyncio
 import re
 from pathlib import Path
 from typing import List
+from urllib.parse import urlparse
 
 import attr
 from absl import app, logging as log
@@ -34,7 +35,19 @@ class Hymn:
 
 
 async def index(session: ClientSession, url: str) -> List[Hymn]:
-    status, content = await fetch(session, url)
+    t = urlparse(url)
+    index_path = DOWNLOAD / Path(t.path).name
+    # check cache, if exists use cache
+    if index_path.exists():
+        log.info(f"{index_path} exists and use it as cache.")
+        with index_path.open("rb") as f:
+            content = f.read()
+    else:
+        status, content = await fetch(session, url)
+        assert status == 200
+        with index_path.open("wb") as out:
+            out.write(content)
+
     text = content.decode()
     soup = BeautifulSoup(text, "html.parser")
     div = soup.find("div", attrs={"class": "sbtablist"})
@@ -42,7 +55,7 @@ async def index(session: ClientSession, url: str) -> List[Hymn]:
     for li in div.findAll("li"):
         no = re.search(r"\d+", li.text).group()
         name = li.a["title"].replace("查看歌谱", "")
-        name = HanziConv.toTraditional(name)
+        name = HanziConv.toTraditional(name).replace("禰", "祢")
         hymn = Hymn(name=name, no=int(no), url=f"{ZANMEI_HOMEPAGE}{li.a['href']}")
         hymns.append(hymn)
 

@@ -6,7 +6,6 @@ from os.path import join
 from pathlib import Path
 
 from absl import app, logging as log
-from hanziconv import HanziConv
 
 from comm import TOTAL, init_logging
 
@@ -19,7 +18,7 @@ def all_titles():
     for _, _, files in os.walk(DOWNLOAD / "zanmei"):
         for filename in files:
             idx, name = filename.split("_", 1)
-            d[idx] = HanziConv.toTraditional(name[:-4])  # .png
+            d[idx] = name[:-4]  # .png
 
     return d
 
