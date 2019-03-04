@@ -15,7 +15,7 @@ from comm import TOTAL, fetch, init_logging, zip_blank_lines
 
 LYRICS_URL_TEMPLATE = "http://www.hoc5.net/service/hymn{level}/{idx:03d}.htm"
 DOWNLOAD = Path("download/hoc5")
-
+PROCESSED = Path("processed/hoc5")
 FLAGS = flags.FLAGS
 
 # TOTAL = 5
@@ -30,12 +30,12 @@ def extract_lyrics(text, index):
     table = soup.find("table")
     lines = zip_blank_lines(map(str.strip, table.text.splitlines()))
     raw_text = "\n".join(lines)
-    raw_path = DOWNLOAD / f"{index:03d}_{title}.raw.txt"
+    raw_path = PROCESSED / f"{index:03d}_{title}.raw.txt"
     with raw_path.open("w") as out:
         log.info(f"extract lyrics to {raw_path}")
         out.write(raw_text)
 
-    errata_path = DOWNLOAD / f"{index:03d}_{title}.errata.txt"
+    errata_path = PROCESSED / f"{index:03d}_{title}.errata.txt"
     if errata_path.exists():
         log.warn(f"{errata_path} exists, use it instead.")
         with errata_path.open("r") as f:

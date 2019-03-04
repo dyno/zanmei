@@ -16,7 +16,7 @@ hoctoga:
 	$(PYTHON) hoctoga.py -v 1
 
 .PHONY: hoctoga
-hoc5: init
+hoc5:
 	$(PYTHON) hoc5.py -v 1
 
 poetry-install:

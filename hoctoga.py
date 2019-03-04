@@ -19,6 +19,7 @@ LYRICS_URL_TEMPLATE = "http://www.hoctoga.org/Chinese/lyrics/hymn/hymn-{idx:03d}
 PPT_URL_BASE = "http://www.hoctoga.org/Chinese/lyrics/hymn/"
 
 DOWNLOAD = Path("download/hoctoga")
+PROCESSED = Path("processed/hoctoga")
 
 FLAGS = flags.FLAGS
 
@@ -32,12 +33,12 @@ def extract_lyrics_and_ppt_link(text, index):
     p_text = trs[1].p.text
     lines = zip_blank_lines(map(str.strip, p_text.splitlines()))
     raw_text = "\n".join(lines)
-    raw_path = DOWNLOAD / f"{index:03d}_{title}.raw.txt"
+    raw_path = PROCESSED / f"{index:03d}_{title}.raw.txt"
     with raw_path.open("w") as out:
         log.info(f"extract lyrics to {raw_path}")
         out.write(raw_text)
 
-    errata_path = DOWNLOAD / f"{index:03d}_{title}.errata.txt"
+    errata_path = PROCESSED / f"{index:03d}_{title}.errata.txt"
     if errata_path.exists():
         log.warn(f"{errata_path} exists, use it instead.")
         with errata_path.open("r") as f:
