@@ -3,16 +3,15 @@
 # vim: set fileencoding=utf-8 :
 
 import asyncio
-import os
 from io import BytesIO
 from pathlib import Path
 from urllib.parse import urlparse
 from zipfile import ZipFile
 
-from absl import app, flags, logging as log
+from absl import app, logging as log
 from bs4 import BeautifulSoup
 
-import aiohttp
+from aiohttp import ClientSession
 from comm import TOTAL, fetch, init_logging, zip_blank_lines
 
 LYRICS_URL_TEMPLATE = "http://www.hoctoga.org/Chinese/lyrics/hymn/hymn-{idx:03d}.htm"
@@ -20,8 +19,6 @@ PPT_URL_BASE = "http://www.hoctoga.org/Chinese/lyrics/hymn/"
 
 DOWNLOAD = Path("download/hoctoga")
 PROCESSED = Path("processed/hoctoga")
-
-FLAGS = flags.FLAGS
 
 
 def extract_lyrics_and_ppt_link(text, index):
@@ -81,47 +78,51 @@ async def download_and_extract_ppt(ppt_zip_link, index):
     assert len(infolist) == 1
 
 
-async def download_lyrics_with_ppt():
-    async with aiohttp.ClientSession() as session:
-        for idx in range(1, TOTAL + 1):
-            lyrics_url = LYRICS_URL_TEMPLATE.format(idx=idx)
-            t = urlparse(lyrics_url)
-            assert t.path.endswith(f"hymn-{idx:03d}.htm")
-            lyrics_path = DOWNLOAD / Path(t.path).name
-            try:
-                # check cache, if exists use cache
-                if lyrics_path.exists():
-                    log.info(f"{lyrics_path} exists and use it as cache.")
-                    with lyrics_path.open("rb") as f:
-                        content = f.read()
-                else:
-                    lyrics_missing_path = DOWNLOAD / f"{Path(t.path).name}.missing"
-                    if lyrics_missing_path.exists():
-                        log.warn(f"{lyrics_missing_path} exists. continue.")
-                        continue
-                    status, content = await fetch(session, lyrics_url)
-                    if status == 200:
-                        with lyrics_path.open("wb") as out:
-                            out.write(content)
-                    elif status == 404:
-                        lyrics_missing_path.open("wb").close()
-                        log.warn(f"write {lyrics_missing_path}. continue.")
-                        continue
-                    else:
-                        log.error(f"status={status}")
+async def download_lyrics_with_ppt(session: ClientSession, idx: int):
+    lyrics_url = LYRICS_URL_TEMPLATE.format(idx=idx)
+    t = urlparse(lyrics_url)
+    assert t.path.endswith(f"hymn-{idx:03d}.htm")
+    lyrics_path = DOWNLOAD / Path(t.path).name
+    try:
+        # check cache, if exists use cache
+        if lyrics_path.exists():
+            log.info(f"{lyrics_path} exists and use it as cache.")
+            with lyrics_path.open("rb") as f:
+                content = f.read()
+        else:
+            lyrics_missing_path = DOWNLOAD / f"{Path(t.path).name}.missing"
+            if lyrics_missing_path.exists():
+                log.warn(f"{lyrics_missing_path} exists. continue.")
+                return
+            status, content = await fetch(session, lyrics_url)
+            if status == 200:
+                with lyrics_path.open("wb") as out:
+                    out.write(content)
+            elif status == 404:
+                lyrics_missing_path.open("wb").close()
+                log.warn(f"write {lyrics_missing_path}. continue.")
+                return
+            else:
+                log.error(f"status={status}")
 
-                # extract the lyrics and the ppt link
-                try:
-                    log.info(f"decoding content for {lyrics_url}")
-                    text = content.decode("big5", errors="strict")
-                except UnicodeDecodeError:
-                    log.warn(f"ignore decoding errors for {lyrics_url}")
-                    text = content.decode("big5", errors="ignore")
+        # extract the lyrics and the ppt link
+        try:
+            log.info(f"decoding content for {lyrics_url}")
+            text = content.decode("big5", errors="strict")
+        except UnicodeDecodeError:
+            log.warn(f"ignore decoding errors for {lyrics_url}")
+            text = content.decode("big5", errors="ignore")
 
-                raw_text, ppt_link = extract_lyrics_and_ppt_link(text, idx)
-                download_and_extract_ppt(ppt_link, idx)
-            except Exception:  # NOQA
-                log.exception(f"exception for {lyrics_url}")
+        raw_text, ppt_link = extract_lyrics_and_ppt_link(text, idx)
+        download_and_extract_ppt(ppt_link, idx)
+    except Exception:  # NOQA
+        log.exception(f"exception for {lyrics_url}")
+
+
+async def process_all_hymns():
+    async with ClientSession() as session:
+        tasks = [download_lyrics_with_ppt(session, idx) for idx in range(1, TOTAL + 1)]
+        await asyncio.wait(tasks)
 
 
 def main(argv):
@@ -129,9 +130,10 @@ def main(argv):
 
     init_logging()
     DOWNLOAD.mkdir(exist_ok=True, parents=True)
+    PROCESSED.mkdir(exist_ok=True, parents=True)
 
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(download_lyrics_with_ppt())
+    loop.run_until_complete(process_all_hymns())
 
 
 if __name__ == "__main__":
