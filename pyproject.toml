@@ -12,6 +12,7 @@ attrs = "*"
 bs4 = "*"
 cattrs = "*"
 cchardet = "*"
+hanziconv = "*"
 requests = "*"
 tqdm = "*"
 
