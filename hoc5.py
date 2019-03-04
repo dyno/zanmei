@@ -25,7 +25,7 @@ def extract_lyrics(text, index):
     soup = BeautifulSoup(text, "html.parser")
 
     title = soup.title.text
-    title = re.sub("[0-9 ]*", "", title)
+    title = re.sub("^[0-9 ]*", "", title).strip()
 
     table = soup.find("table")
     lines = map(str.strip, table.text.splitlines())
