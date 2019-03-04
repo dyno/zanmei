@@ -13,7 +13,7 @@ from absl import app, flags, logging as log
 from bs4 import BeautifulSoup
 
 import aiohttp
-from comm import TOTAL, fetch, init_logging
+from comm import TOTAL, fetch, init_logging, zip_blank_lines
 
 LYRICS_URL_TEMPLATE = "http://www.hoctoga.org/Chinese/lyrics/hymn/hymn-{idx:03d}.htm"
 PPT_URL_BASE = "http://www.hoctoga.org/Chinese/lyrics/hymn/"
@@ -30,7 +30,7 @@ def extract_lyrics_and_ppt_link(text, index):
     title = trs[0].text.strip()
 
     p_text = trs[1].p.text
-    lines = map(str.strip, p_text.splitlines())
+    lines = zip_blank_lines(map(str.strip, p_text.splitlines()))
     raw_text = "\n".join(lines)
     raw_path = DOWNLOAD / f"{index:03d}_{title}.raw.txt"
     with raw_path.open("w") as out:

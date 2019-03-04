@@ -7,15 +7,12 @@ WITH_VENV :=
 endif
 PYTHON := $(WITH_VENV) python
 
-init:
-	mkdir -p download/raw
-
 .PHONY: zanmei
-zanmei: init
+zanmei:
 	$(PYTHON) zanmei.py -v 1
 
 .PHONY: hoctoga
-hoctoga: init
+hoctoga:
 	$(PYTHON) hoctoga.py -v 1
 
 .PHONY: hoctoga

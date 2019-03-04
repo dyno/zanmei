@@ -11,7 +11,7 @@ from absl import app, flags, logging as log
 from bs4 import BeautifulSoup
 
 import aiohttp
-from comm import TOTAL, fetch, init_logging
+from comm import TOTAL, fetch, init_logging, zip_blank_lines
 
 LYRICS_URL_TEMPLATE = "http://www.hoc5.net/service/hymn{level}/{idx:03d}.htm"
 DOWNLOAD = Path("download/hoc5")
@@ -28,7 +28,7 @@ def extract_lyrics(text, index):
     title = re.sub("^[0-9 ]*", "", title).strip()
 
     table = soup.find("table")
-    lines = map(str.strip, table.text.splitlines())
+    lines = zip_blank_lines(map(str.strip, table.text.splitlines()))
     raw_text = "\n".join(lines)
     raw_path = DOWNLOAD / f"{index:03d}_{title}.raw.txt"
     with raw_path.open("w") as out:
