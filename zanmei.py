@@ -55,16 +55,19 @@ async def download(session: ClientSession, hymn: Hymn):
         return
 
     log.debug(f"downloading to {hymn.filepath} ...")
-    status, content = await fetch(session, hymn.url)
-    assert status == 200
-    text = content.decode()
-    soup = BeautifulSoup(text, "html.parser")
-    div = soup.find("div", attrs={"class": "img_tab"})
-    img_url = div.a["href"]
-    status, content = await fetch(session, img_url)
-    assert status == 200
-    with hymn.filepath.open("wb") as f:
-        f.write(content)
+    try:
+        status, content = await fetch(session, hymn.url)
+        assert status == 200
+        text = content.decode()
+        soup = BeautifulSoup(text, "html.parser")
+        div = soup.find("div", attrs={"class": "img_tab"})
+        img_url = div.a["href"]
+        status, content = await fetch(session, img_url)
+        assert status == 200
+        with hymn.filepath.open("wb") as f:
+            f.write(content)
+    except AssertionError:
+        log.exception(f"failed to download {hymn.filepath}")
 
 
 def verify(filepath: Path, glob: str, total: int):
@@ -82,12 +85,8 @@ def verify(filepath: Path, glob: str, total: int):
 async def download_image_copy():
     async with ClientSession() as session:
         hymns = await index(session, HYMNS_INDEX_URL)
-        for hymn in hymns:
-            try:
-                await download(session, hymn)
-            except Exception:
-                log.exception(f"failed to download {hymn}.")
-
+        tasks = [download(session, hymn) for hymn in hymns]
+        await asyncio.wait(tasks)
         verify(DOWNLOAD, "*.png", len(hymns))
 
 
