@@ -15,9 +15,15 @@ zanmei:
 hoctoga:
 	$(PYTHON) hoctoga.py -v 1
 
-.PHONY: hoctoga
+.PHONY: hoc5
 hoc5:
 	$(PYTHON) hoc5.py -v 1
+
+
+.PHONY: mvccc
+mvccc:
+	$(PYTHON) mvccc.py -v 1
+
 
 .PHONY: stats
 stats:
