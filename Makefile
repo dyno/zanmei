@@ -7,27 +7,39 @@ WITH_VENV :=
 endif
 PYTHON := $(WITH_VENV) python
 
+OPT= -v 1
+
 .PHONY: zanmei
 zanmei:
-	$(PYTHON) zanmei.py -v 1
+	$(PYTHON) zanmei.py $(OPT)
 
 .PHONY: hoctoga
 hoctoga:
-	$(PYTHON) hoctoga.py -v 1
+	$(PYTHON) hoctoga.py $(OPT)
 
 .PHONY: hoc5
 hoc5:
-	$(PYTHON) hoc5.py -v 1
+	$(PYTHON) hoc5.py $(OPT)
 
 
 .PHONY: mvccc
 mvccc:
-	$(PYTHON) mvccc.py -v 1
+	$(PYTHON) mvccc.py $(OPT)
 
 
 .PHONY: stats
 stats:
-	$(PYTHON) stats.py -v 1
+	$(PYTHON) stats.py $(OPT)
+
+
+.PHONY: pptx
+pptx:
+	$(PYTHON) slides.py $(OPT)
+slides:pptx
+
+.PHONY: ipython
+ipython:
+	poetry run ipython
 
 poetry-install:
 	poetry install

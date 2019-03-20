@@ -13,11 +13,12 @@ bs4 = "*"
 cattrs = "*"
 cchardet = "*"
 hanziconv = "*"
+python-pptx = "*"
 requests = "*"
 tqdm = "*"
 
-
 [tool.poetry.dev-dependencies]
+ipython = "*"
 pytest = "*"
 
 [tool.black]
