@@ -29,8 +29,11 @@ def has_lyrics():
     d = defaultdict(list)
     for dir_, _, files in os.walk(PROCESSED):
         for filename in files:
-            idx, name = filename.split("_", 1)
-            d[idx].append(join(dir_, filename))
+            try:
+                idx, name = filename.split("_", 1)
+                d[idx].append(join(dir_, filename))
+            except Exception:
+                log.exception(f"exception processing {filename} =>")
 
     return d
 
