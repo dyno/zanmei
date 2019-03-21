@@ -11,6 +11,8 @@ OPT := -v 1
 
 SUNDAY := $(shell gdate -d "next sunday" +"%Y-%m-%d")
 
+#-------------------------------------------------------------------------------
+# online resources
 
 .PHONY: zanmei
 zanmei:
@@ -34,17 +36,26 @@ mvccc:
 stats:
 	$(PYTHON) stats.py $(OPT)
 
+bible_big5:
+	cd download && curl -L -O http://download.o-bible.com:8080/hb5.gz && gunzip hb5.gz
 
+download: zanmei hoctoga hoc5 mvccc bible_big5
+
+#-------------------------------------------------------------------------------
+# create slides for sunday service
 .PHONY: pptx
 pptx:
 	$(PYTHON) slides.py $(OPT) --pptx=$(SUNDAY).pptx --flagfile=services/$(SUNDAY).flags
 slides:pptx
 
+# extract text from a pptx file
 pptx_to_text:
 ifdef PPTX
 	$(PYTHON) slides.py --extract_only --pptx $(PPTX)
 endif
 
+#-------------------------------------------------------------------------------
+# development related
 .PHONY: ipython
 ipython:
 	poetry run ipython
