@@ -3,6 +3,8 @@
 # vim: set fileencoding=utf-8 :
 
 from datetime import date, timedelta
+from pathlib import Path
+from pprint import pformat
 from typing import Generator, List, Tuple
 
 import attr
@@ -10,10 +12,28 @@ from absl import app, flags, logging as log
 
 from pptx import Presentation
 
-flags.DEFINE_string("master_pptx", "mvccc_master.pptx", "The template pptx")
+flags.DEFINE_bool("extract_only", False, "extract text from pptx")
 flags.DEFINE_string("pptx", "", "The pptx")
+flags.DEFINE_string("master_pptx", "mvccc_master.pptx", "The template pptx")
+
+flags.DEFINE_string("choir", "", "The hymn by choir")
+flags.DEFINE_multi_string("hymns", [], "The hymns by congregation")
+flags.DEFINE_string("response", "", "The hymn after the teaching")
+flags.DEFINE_string("offering", "", "The hymn for the offering")
+
+flags.DEFINE_string("verses", "", "The bible verses")
+flags.DEFINE_string("memorize", "", "The bible verse to memorize")
+
+flags.DEFINE_string("message", "", "The message")
+flags.DEFINE_string("messager", "", "The messager")
+
+flags.DEFINE_bool("communion", False, "Whether to have communion")
 
 FLAGS = flags.FLAGS
+
+PROCESSED = Path("processed")
+
+# ------------------------------------------------------------------------------
 
 
 def next_sunday() -> str:
@@ -22,18 +42,23 @@ def next_sunday() -> str:
     return sunday.isoformat()
 
 
-def extract_slides_text(ppt: Presentation) -> Generator[Tuple[int, List[str]], None, None]:
+def extract_slides_text(ppt: Presentation) -> Generator[Tuple[int, List[List[str]]], None, None]:
     for idx, slide in enumerate(ppt.slides):
-        text_list = []  # type: List[str]
-        if slide.shapes.title:
-            log.debug(f"{slide.shapes.title.text}")
+        shape_text_list: List[List[str]] = []
         for shape in slide.shapes:
             if not shape.has_text_frame:
                 continue
+            paragraph_text_list: List[str] = []
             for paragraph in shape.text_frame.paragraphs:
-                text_list.extend([run.text for run in paragraph.runs])
-        yield idx, text_list
+                paragraph_text_list.append("".join(run.text.replace("\xa0", " ") for run in paragraph.runs))
+            while not paragraph_text_list[-1]:
+                paragraph_text_list.pop()
+            shape_text_list.append(paragraph_text_list)
 
+        yield idx, shape_text_list
+
+
+# ------------------------------------------------------------------------------
 
 LAYOUT_PRELUDE = 0
 LAYOUT_MESSAGE = 1
@@ -73,8 +98,36 @@ class Message:
 
 @attr.s
 class Hymn:
-    title: str = attr.ib()
-    lyrics: List[List[str]] = attr.ib()
+    index: str = attr.ib()  # can be index number, hymn's title
+    lyrics: List[Tuple[str, List[str]]] = attr.ib(init=False)  # List[title, paragraph]
+
+    def __attrs_post_init__(self):
+        ptn = f"**/*{self.index}*.pptx"
+        glob = PROCESSED.glob(ptn)
+        found = list(glob)
+        assert found, f"can not find anything match {ptn}."
+        if len(found) > 1:
+            log.warn(f"found more than 1 files for {ptn}. {[p.as_posix() for p in found]}")
+        for path in found:
+            if path.stem == self.index:
+                filepath = path.as_posix()
+                break
+        else:
+            filepath = found[0].as_posix()
+        ppt = Presentation(filepath)
+        self.lyrics = list(extract_slides_text(ppt))
+        log.info(f"index={self.index}, lyrics=\n{pformat(self.lyrics)}")
+
+    def add_to(self, ppt: Presentation) -> Presentation:
+        for _, (title, paragraph) in self.lyrics:
+            slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_HYMN])
+            title_holder, paragraph_holder = slide.placeholders
+            title_holder.text = title[0]
+            # XXX: workaround alignment problem
+            paragraph[0] = " " + paragraph[0]
+            paragraph_holder.text = "\n".join(paragraph)
+
+        return ppt
 
 
 @attr.s
@@ -90,7 +143,37 @@ class Section:
 
 
 @attr.s
+class Verse:
+    # TODO:
+    location: str = attr.ib()
+    message: str = attr.ib()
+
+    def add_to(self, ppt: Presentation) -> Presentation:
+        slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_MEMORIZE])
+        title, message = slide.placeholders
+        title.text = self.location
+        message.text = self.message
+
+        return ppt
+
+
+@attr.s
+class Memorize:
+    # TODO:
+    message: str = attr.ib()
+
+    def add_to(self, ppt: Presentation) -> Presentation:
+        slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_MEMORIZE])
+        title, message = slide.placeholders
+        title.text = "本週金句"
+        message.text = self.message
+
+        return ppt
+
+
+@attr.s
 class Teaching:
+    # TODO
     title: str = attr.ib()
     message: str = attr.ib()
     messenger: str = attr.ib()
@@ -104,12 +187,6 @@ class Teaching:
 
 
 @attr.s
-class Memorize:
-    verse: str = attr.ib()
-    location: str = attr.ib()
-
-
-@attr.s
 class Blank:
     def add_to(self, ppt: Presentation) -> Presentation:
         _ = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_BLANK])
@@ -117,9 +194,7 @@ class Blank:
         return ppt
 
 
-def mvccc_slides_stack(master_slide: Presentation) -> Presentation:
-    ppt = master_slide
-
+def mvccc_slides() -> List:
     slides = [
         Prelude("  請儘量往前或往中間坐,並將手機關閉或關至靜音,預備心敬拜！", "silence_phone1.png"),
         Message(
@@ -128,37 +203,74 @@ def mvccc_slides_stack(master_slide: Presentation) -> Presentation:
 
             哈巴谷書 2:20"""
         ),
-        Section("頌  讚"),
-        Section("宣  召"),
-        Section("祈  禱"),
-        Section("讀  經"),
-        Section("獻  詩"),
-        Teaching("信息", "「  」", "牧師"),
-        Section("回  應"),
-        Section("奉 獻 禱 告"),
-        Section("歡 迎 您"),
-        Section("家 事 分 享"),
-        Section("祝  福"),
-        Section("默  禱"),
-        Blank(),
     ]
+    slides.append(Hymn("聖哉聖哉聖哉"))
+
+    slides.append(Section("頌  讚"))
+    if FLAGS.choir:
+        slides.append(Hymn(FLAGS.choir))
+
+    slides.append(Section("宣  召"))
+    slides.append(Section("祈  禱"))
+
+    slides.append(Section("讀  經"))
+    # slides.append(Verse(FLAGS.verse))
+    # slides.append(Memorize("神愛世人"))
+
+    slides.append(Section("獻  詩"))
+    if FLAGS.hymns:
+        slides.extend(map(Hymn, FLAGS.hymns))
+
+    slides.append(Teaching("信息", f"「{FLAGS.message}」", f"{FLAGS.messager}"))
+
+    slides.append(Section("回  應"))
+    if FLAGS.response:
+        slides.append(Hymn(FLAGS.response))
+
+    if FLAGS.offering:
+        slides.append(Hymn(FLAGS.offering))
+
+    slides.append(Section("奉 獻 禱 告"))
+    slides.append(Section("歡 迎 您"))
+    slides.append(Section("家 事 分 享"))
+
+    slides.append(Hymn("三一頌"))
+
+    if FLAGS.communion:
+        slides.append(Section("聖  餐"))
+
+    slides.append(Section("祝  福"))
+    slides.append(Section("默  禱"))
+    slides.append(Blank())
+
+    return slides
+
+
+def to_pptx(slides: List, master_slide: Presentation) -> Presentation:
+    ppt = master_slide
+
     for slide in slides:
         slide.add_to(ppt)
 
     return ppt
 
 
+# ------------------------------------------------------------------------------
+
+
 def main(argv):
     del argv
 
+    if FLAGS.extract_only:
+        ppt = Presentation(FLAGS.pptx)
+
+        for idx, text in extract_slides_text(ppt):
+            print(f"{idx+1:02d} {text}")
+        return
+
+    slides = mvccc_slides()
     master = Presentation(FLAGS.master_pptx)
-    ppt = mvccc_slides_stack(master)
-
-    for idx, text in extract_slides_text(ppt):
-        print(f"{idx+1:02d} {text}")
-
-    if not FLAGS.pptx:
-        FLAGS.pptx = f"{next_sunday()}.pptx"
+    ppt = to_pptx(slides, master)
     ppt.save(FLAGS.pptx)
 
 

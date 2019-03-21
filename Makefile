@@ -7,7 +7,10 @@ WITH_VENV :=
 endif
 PYTHON := $(WITH_VENV) python
 
-OPT= -v 1
+OPT := -v 1
+
+SUNDAY := $(shell gdate -d "next sunday" +"%Y-%m-%d")
+
 
 .PHONY: zanmei
 zanmei:
@@ -34,8 +37,13 @@ stats:
 
 .PHONY: pptx
 pptx:
-	$(PYTHON) slides.py $(OPT)
+	$(PYTHON) slides.py $(OPT) --pptx=$(SUNDAY).pptx --flagfile=services/$(SUNDAY).flags
 slides:pptx
+
+pptx_to_text:
+ifdef PPTX
+	$(PYTHON) slides.py --extract_only --pptx $(PPTX)
+endif
 
 .PHONY: ipython
 ipython:
