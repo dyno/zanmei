@@ -42,18 +42,26 @@ bible_text:
 download: zanmei hoctoga hoc5 mvccc bible_text
 
 #-------------------------------------------------------------------------------
-# create slides for sunday service
 .PHONY: pptx
+# create slides for sunday service
 pptx:
 	$(PYTHON) slides.py $(OPT) --pptx=$(SUNDAY).pptx --flagfile=services/$(SUNDAY).flags
 slides:pptx
 
+.PHONY: pptx_to_text
 # extract text from a pptx file
 pptx_to_text:
 ifdef PPTX
 	$(PYTHON) slides.py --extract_only --pptx $(PPTX)
 endif
 
+.PHONY: scripture
+scripture:
+ifdef VERSE
+	$(PYTHON) scripture.py --bible_index $(VERSE)
+else
+	$(PYTHON) scripture.py
+endif
 #-------------------------------------------------------------------------------
 # development related
 .PHONY: ipython

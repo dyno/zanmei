@@ -136,7 +136,7 @@ def main(argv):
         for loc, verses in result.items():
             print(loc)
             for t in verses.itertuples():
-                print(f"{t.Index[-1]:2s} {t.scripture}")
+                print(f"{t.Index[-1]:>3s} {t.scripture}")
             print()
 
 
