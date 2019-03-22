@@ -10,6 +10,7 @@ from typing import Generator, List, Tuple
 import attr
 from absl import app, flags, logging as log
 
+import scripture
 from pptx import Presentation
 
 flags.DEFINE_bool("extract_only", False, "extract text from pptx")
@@ -21,8 +22,8 @@ flags.DEFINE_multi_string("hymns", [], "The hymns by congregation")
 flags.DEFINE_string("response", "", "The hymn after the teaching")
 flags.DEFINE_string("offering", "", "The hymn for the offering")
 
-flags.DEFINE_string("verses", "", "The bible verses")
-flags.DEFINE_string("memorize", "", "The bible verse to memorize")
+flags.DEFINE_string("scripture", "", "The bible scriptures")
+flags.DEFINE_string("memorize", "", "The bible scripture to memorize")  # verse of the week
 
 flags.DEFINE_string("message", "", "The message")
 flags.DEFINE_string("messager", "", "The messager")
@@ -143,30 +144,35 @@ class Section:
 
 
 @attr.s
-class Verse:
-    # TODO:
-    location: str = attr.ib()
-    message: str = attr.ib()
+class Scripture:
+    locations: str = attr.ib()
 
     def add_to(self, ppt: Presentation) -> Presentation:
-        slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_MEMORIZE])
-        title, message = slide.placeholders
-        title.text = self.location
-        message.text = self.message
+        bible = scripture.scripture()
+        for loc, verses in scripture.search(bible, self.locations).items():
+            for t in verses.itertuples():
+                slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_MEMORIZE])
+                title, message = slide.placeholders
+                title.text = loc
+                message.text = f"{t.Index[-1]} {t.scripture}"  # verse: scripture
 
         return ppt
 
 
 @attr.s
 class Memorize:
-    # TODO:
-    message: str = attr.ib()
+    location: str = attr.ib()
 
     def add_to(self, ppt: Presentation) -> Presentation:
         slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_MEMORIZE])
         title, message = slide.placeholders
+
         title.text = "本週金句"
-        message.text = self.message
+
+        bible = scripture.scripture()
+        loc, verses = list(scripture.search(bible, self.location).items())[0]
+        text = "".join(verses["scripture"].to_list())
+        message.text = text + f"\n{loc:>20}"
 
         return ppt
 
@@ -214,8 +220,8 @@ def mvccc_slides() -> List:
     slides.append(Section("祈  禱"))
 
     slides.append(Section("讀  經"))
-    # slides.append(Verse(FLAGS.verse))
-    # slides.append(Memorize("神愛世人"))
+    slides.append(Scripture(FLAGS.scripture))
+    slides.append(Memorize(FLAGS.memorize))
 
     slides.append(Section("獻  詩"))
     if FLAGS.hymns:
