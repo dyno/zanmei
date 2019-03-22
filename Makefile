@@ -36,10 +36,10 @@ mvccc:
 stats:
 	$(PYTHON) stats.py $(OPT)
 
-bible_big5:
-	cd download && curl -L -O http://download.o-bible.com:8080/hb5.gz && gunzip hb5.gz
+bible_text:
+	cd download && curl -L -O http://download.ibibles.net/cut.zip && unzip cut.zip
 
-download: zanmei hoctoga hoc5 mvccc bible_big5
+download: zanmei hoctoga hoc5 mvccc bible_text
 
 #-------------------------------------------------------------------------------
 # create slides for sunday service
