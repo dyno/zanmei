@@ -64,7 +64,7 @@ def extract_slides_text(ppt: Presentation) -> Generator[Tuple[int, List[List[str
 LAYOUT_PRELUDE = 0
 LAYOUT_MESSAGE = 1
 LAYOUT_HYMN = 2
-LAYOUT_VERSE = 3
+LAYOUT_SCRIPTURE = 3
 LAYOUT_MEMORIZE = 4
 LAYOUT_TEACHING = 5
 LAYOUT_SECTION = 6
@@ -76,10 +76,10 @@ class Prelude:
     message: str = attr.ib()
     picture: str = attr.ib()
 
-    def add_to(self, ppt: Presentation) -> Presentation:
+    def add_to(self, ppt: Presentation, padding="\u3000\u3000") -> Presentation:
         slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_PRELUDE])
         message, picture = slide.placeholders
-        message.text = self.message
+        message.text = padding + self.message
         picture.insert_picture(self.picture)
 
         return ppt
@@ -89,10 +89,10 @@ class Prelude:
 class Message:
     message: str = attr.ib()
 
-    def add_to(self, ppt: Presentation) -> Presentation:
+    def add_to(self, ppt: Presentation, padding="\u3000\u3000") -> Presentation:
         slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_MESSAGE])
         message, = slide.placeholders
-        message.text = self.message
+        message.text = padding + self.message
 
         return ppt
 
@@ -119,13 +119,13 @@ class Hymn:
         self.lyrics = list(extract_slides_text(ppt))
         log.info(f"index={self.index}, lyrics=\n{pformat(self.lyrics)}")
 
-    def add_to(self, ppt: Presentation) -> Presentation:
+    def add_to(self, ppt: Presentation, padding=" ") -> Presentation:
         for _, (title, paragraph) in self.lyrics:
             slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_HYMN])
             title_holder, paragraph_holder = slide.placeholders
             title_holder.text = title[0]
             # XXX: workaround alignment problem
-            paragraph[0] = " " + paragraph[0]
+            paragraph[0] = padding + paragraph[0]
             paragraph_holder.text = "\n".join(paragraph)
 
         return ppt
@@ -147,14 +147,17 @@ class Section:
 class Scripture:
     locations: str = attr.ib()
 
-    def add_to(self, ppt: Presentation) -> Presentation:
+    def add_to(self, ppt: Presentation, padding="  ") -> Presentation:
         bible = scripture.scripture()
         for loc, verses in scripture.search(bible, self.locations).items():
-            for t in verses.itertuples():
-                slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_MEMORIZE])
+            for idx, t in enumerate(verses.itertuples()):
+                if idx % 2 == 0:
+                    slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_SCRIPTURE])
                 title, message = slide.placeholders
                 title.text = loc
-                message.text = f"{t.Index[-1]} {t.scripture}"  # verse: scripture
+                message.text += (
+                    padding if idx % 2 == 0 else "\n"
+                ) + f"{t.Index[-1]}\u3000{t.scripture}"  # verse: scripture
 
         return ppt
 
@@ -163,7 +166,7 @@ class Scripture:
 class Memorize:
     location: str = attr.ib()
 
-    def add_to(self, ppt: Presentation) -> Presentation:
+    def add_to(self, ppt: Presentation, padding="\u3000\u3000") -> Presentation:
         slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_MEMORIZE])
         title, message = slide.placeholders
 
@@ -172,14 +175,13 @@ class Memorize:
         bible = scripture.scripture()
         loc, verses = list(scripture.search(bible, self.location).items())[0]
         text = "".join(verses["scripture"].to_list())
-        message.text = text + f"\n{loc:>20}"
+        message.text = padding + text + f"\n{loc:>25}"
 
         return ppt
 
 
 @attr.s
 class Teaching:
-    # TODO
     title: str = attr.ib()
     message: str = attr.ib()
     messenger: str = attr.ib()
@@ -202,10 +204,9 @@ class Blank:
 
 def mvccc_slides() -> List:
     slides = [
-        Prelude("  請儘量往前或往中間坐,並將手機關閉或關至靜音,預備心敬拜！", "silence_phone1.png"),
+        Prelude("請儘量往前或往中間坐,並將手機關閉或關至靜音,預備心敬拜！", "silence_phone1.png"),
         Message(
-            """  惟耶和華在他的聖殿中；
-全地的人，都當在他面前肅敬靜默。
+            """惟耶和華在他的聖殿中；全地的人，都當在他面前肅敬靜默。
 
             哈巴谷書 2:20"""
         ),
