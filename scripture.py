@@ -9,7 +9,7 @@ from typing import Dict, List
 import pandas as pd
 from absl import app, flags, logging as log
 
-flags.DEFINE_string("bible_source", "download/cut/books.txt", "books.txt from http://download.ibibles.net/cut.zip")
+flags.DEFINE_string("bible_text", "download/cut/books.txt", "books.txt from http://download.ibibles.net/cut.zip")
 flags.DEFINE_string("bible_index", "約翰福音3:16;14:6", "bible search by location")
 
 FLAGS = flags.FLAGS
@@ -29,16 +29,19 @@ def to_record(f):
 
 
 @lru_cache()
-def scripture(source=None):
-    if source is None:
-        source = FLAGS.bible_source
+def scripture(text=None, source="ibibles"):
+    if text is None:
+        text = FLAGS.bible_text
+
+    assert source == "ibibles", "only ibibles is supported"
+
     # https://stackoverflow.com/questions/17912307/u-ufeff-in-python-string
-    with Path(source).open(encoding="utf-8-sig") as f:
+    with Path(text).open(encoding="utf-8-sig") as f:
         df = pd.DataFrame.from_records(to_record(f), columns=["book", "chapter", "verse", "scripture"])
         df.set_index(["book", "chapter", "verse"], inplace=True)
         # if 2 verses merged to 1, use the 1st verse and clear the 2nd.
         warnings.filterwarnings("ignore", category=pd.errors.PerformanceWarning)
-        df["scripture"] = df["scripture"].str.strip().str.replace("。", "。")
+        df["scripture"] = df["scripture"].str.strip()
         df.loc[df["scripture"].str.startswith("見上節"), ["scripture"]] = ""
 
         return df
