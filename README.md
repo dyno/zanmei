@@ -20,6 +20,7 @@ $ cat services/2019-03-24.flags
 --messager=姜武城牧師
 
 $ make slides SUNDAY=2019-03-24
+$ open 2019-03-24.pptx
 ```
 
 #### PPT轉純文本
