@@ -9,9 +9,9 @@ from typing import Dict, List
 import pandas as pd
 from absl import app, flags, logging as log
 
-flags.DEFINE_string(
-    "bible_source", "download/cut/books.txt", "bible source downloaded from http://download.ibibles.net/cut.zip"
-)
+flags.DEFINE_string("bible_source", "download/cut/books.txt", "books.txt from http://download.ibibles.net/cut.zip")
+flags.DEFINE_string("bible_index", "約翰福音3:16;14:6", "bible search by location")
+
 FLAGS = flags.FLAGS
 
 
@@ -132,11 +132,9 @@ def main(argv):
     del argv
     bible = scripture()
     with pd.option_context("display.unicode.east_asian_width", True, "display.max_colwidth", 200):
-        print(bible.loc[("約翰福音", "3", "16")]["scripture"])
-        result = search(bible, "馬太福音 25：14-31")
+        result = search(bible, FLAGS.bible_index)
         for loc, verses in result.items():
-            print(loc)
-            print(verses)
+            print(loc, verses.iloc[0]["scripture"])
 
 
 if __name__ == "__main__":
