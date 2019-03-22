@@ -134,7 +134,10 @@ def main(argv):
     with pd.option_context("display.unicode.east_asian_width", True, "display.max_colwidth", 200):
         result = search(bible, FLAGS.bible_index)
         for loc, verses in result.items():
-            print(loc, verses.iloc[0]["scripture"])
+            print(loc)
+            for t in verses.itertuples():
+                print(f"{t.Index[-1]:2s} {t.scripture}")
+            print()
 
 
 if __name__ == "__main__":
