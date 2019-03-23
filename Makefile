@@ -36,10 +36,14 @@ mvccc:
 stats:
 	$(PYTHON) stats.py $(OPT)
 
-bible_text:
+ibibles.net:
 	cd download && curl -L -O http://download.ibibles.net/cut.zip && unzip cut.zip
 
-download: zanmei hoctoga hoc5 mvccc bible_text
+bible.cloud:
+	cd download && curl -L -O https://bible.cloud/ebooks/epub/CMNUNV.epub
+	cd download && curl -L -O https://bible.cloud/ebooks/epub/CMNUN1.epub
+
+download: zanmei hoctoga hoc5 mvccc ibibles.net bible.cloud
 
 #-------------------------------------------------------------------------------
 .PHONY: pptx
@@ -64,6 +68,10 @@ else
 endif
 #-------------------------------------------------------------------------------
 # development related
+
+test:
+	$(PYTHON) -m pytest --doctest-modules --capture=no --verbose
+
 .PHONY: ipython
 ipython:
 	poetry run ipython
