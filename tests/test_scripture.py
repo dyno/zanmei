@@ -13,14 +13,17 @@ def init():
 
 
 def test_bible_basics():
-    b1 = from_bible_cloud("download/CMNUNV.epub")
-    b2 = from_bibles_net("download/cut/books.txt")
+    bc = from_bible_cloud("download/CMNUNV.epub")
+    bn = from_bibles_net("download/cut/books.txt")
 
-    assert b1.word_god == "上帝"
-    assert b2.word_god == "\u3000神"
+    assert bc.word_god == "上帝"
+    assert bn.word_god == "\u3000神"
 
-    assert len(set(b1.df.index.get_level_values(0))) == 66
-    assert len(set(b2.df.index.get_level_values(0))) == 66
-
-    df = pd.merge(b1.df, b2.df, left_index=True, right_index=True, how="outer")
-    print(df[df.isnull().any(axis=1)])
+    assert len(set(bc.df.index.get_level_values(0))) == 66
+    assert len(set(bn.df.index.get_level_values(0))) == 66
+    
+    df = pd.merge(bc.df, bn.df, left_index=True, right_index=True, how="outer")
+    with pd.option_context(
+        "display.unicode.east_asian_width", True, "display.max_colwidth", 200, "display.max_rows", 10000
+    ):
+        print(df[df.isnull().any(axis=1) & ~df.isnull().all(axis=1)])

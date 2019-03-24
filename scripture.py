@@ -2,7 +2,7 @@
 
 import re
 import warnings
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict, defaultdict, namedtuple
 from functools import lru_cache
 from itertools import islice
 from pathlib import Path
@@ -11,7 +11,6 @@ from zipfile import ZipFile
 
 import pandas as pd
 from absl import app, flags, logging as log
-
 from bs4 import BeautifulSoup
 
 flags.DEFINE_string("bible_text", "download/CMNUNV.epub", "see Makefile for source of download")
@@ -42,7 +41,7 @@ def from_bibles_net(filename: str) -> Bible:
                 continue
             try:
                 parts = line.split(maxsplit=4)
-                book = parts[2]
+                book = parts[2].replace("列王記", "列王紀").replace("創世紀", "創世記")
                 chapter, verse = map(int, parts[3].split(":"))
                 yield BibleVerse(book, chapter, verse, parts[-1])
             except Exception as e:
@@ -65,6 +64,7 @@ def from_bibles_net(filename: str) -> Bible:
 
     df.set_index(["book", "chapter", "verse"], inplace=True)
     df.index = pd.MultiIndex.from_tuples(df.index)
+    df.dropna(inplace=True)
 
     return Bible("\u3000神", df)
 
@@ -78,31 +78,49 @@ def from_bible_cloud(filename: str) -> Bible:
             log.info(f"processing {book}")
             book_text = zf.read(f"OEBPS/{a['href']}").decode("utf-8-sig")
             book_root = BeautifulSoup(book_text, features="lxml")
+
+            # <aside epub:type="footnote" id="FN1"><p class="f">
+            #   <a class="notebackref" href="#MT1_1"><span class="notemark">*</span> 1:1:</a>
+            #   <span class="ft">後裔，子孫：原文是兒子；下同</span>
+            # </p></aside>
+            note_list = [
+                (aside.find("a").text.strip(" *:"), aside.find("span", class_="ft").text)
+                for aside in book_root.find_all("aside")
+            ]
+            notes: Dict[str, List[str]] = defaultdict(list)
+            for ch_ver, note in note_list:
+                notes[ch_ver].append(note)
+
+            def to_bible_verse(book, chapter, verse, scripture, notes):
+                chv = f"{chapter}:{verse}"
+                if chv in notes:
+                    scripture = scripture.replace("*", "（{}）").format(*notes[chv])
+                return BibleVerse(book, chapter, verse, scripture)
+
             collector = []
             for div in book_root.find_all("div", class_=lambda klass: klass in ["p", "q", "m"]):
-                if div["class"][0] in ["p", "q"]:
-                    for i, c in enumerate(islice(div.children, 1, None)):
-                        try:
-                            if hasattr(c, "class") and c["class"] == ["verse"]:
-                                # <span class="verse" id="MT1_12">12 </span>
-                                if collector:
-                                    # yield last collected verse
-                                    yield BibleVerse(book, chapter, verse, "".join(collector))
-                                # next verse
-                                chapter, verse = map(int, c["id"][2:].split("_"))
-                                collector = []
-                            elif hasattr(c, "text"):
-                                collector.append(c.text)
-                            else:  # NavigableString
-                                collector.append(str(c))
-                        except Exception:
-                            log.exception(f"exception processing div={div}")
-                else:
-                    collector.append(div.text)
+                for c in div.children:
+                    try:
+                        if hasattr(c, "class") and c["class"] == ["verse"]:
+                            # <span class="verse" id="MT1_12">12 </span>
+                            collector = [s for s in collector if s.strip()]
+                            if collector:
+                                # yield last collected verse
+                                yield to_bible_verse(book, chapter, verse, "".join(collector), notes)
+                            # next verse
+                            chapter = int(c["id"][2:].split("_")[0])
+                            # <span class="verse" id="MT1_21">21 </span>
+                            verse = int(c.text.strip("\xa0").split("-")[0])
+                            collector = []
+                        elif hasattr(c, "text"):
+                            collector.append(c.text)
+                        else:  # NavigableString
+                            collector.append(str(c))
+                    except Exception:
+                        log.exception(f"exception processing div={div}")
 
             # last verse of book
-            scripture = "".join(collector)
-            yield BibleVerse(book, chapter, verse, scripture)
+            yield to_bible_verse(book, chapter, verse, "".join(collector), notes)
 
     cache = Path(filename + ".csv")
     if cache.exists():
