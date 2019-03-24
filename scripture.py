@@ -33,7 +33,7 @@ class BibleVerse(NamedTuple):
     scripture: str
 
 
-def from_bibles_net(filename: str) -> Bible:
+def from_ibibles_net(filename: str) -> Bible:
     # XXX: problem with this source is the puctuation is not contemporary.
     def to_record(f: TextIO) -> Generator[BibleVerse, None, None]:
         for line in f:
@@ -146,7 +146,7 @@ def scripture(filename=None, source=None):
     if source is None:
         source = FLAGS.bible_source
 
-    return {"ibibles.net": from_bibles_net, "bible.cloud": from_bible_cloud}[source](filename)
+    return {"ibibles.net": from_ibibles_net, "bible.cloud": from_bible_cloud}[source](filename)
 
 
 ScriptureIndex = namedtuple("ScriptureIndex", ["book", "chapter", "verses"])
