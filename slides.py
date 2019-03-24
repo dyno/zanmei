@@ -150,14 +150,14 @@ class Scripture:
     def add_to(self, ppt: Presentation, padding="  ") -> Presentation:
         bible = scripture.scripture()
         for loc, verses in scripture.search(bible, self.locations).items():
-            for idx, t in enumerate(verses.itertuples()):
+            for idx, bv in enumerate(verses):
                 if idx % 2 == 0:
                     slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_SCRIPTURE])
                 title, message = slide.placeholders
                 title.text = loc
                 message.text += (
                     padding if idx % 2 == 0 else "\n"
-                ) + f"{t.Index[-1]}\u3000{t.scripture}"  # verse: scripture
+                ) + f"{bv.verse}\u3000{bv.scripture}"  # verse: scripture
 
         return ppt
 
@@ -173,9 +173,8 @@ class Memorize:
         title.text = "本週金句"
 
         bible = scripture.scripture()
-        loc, verses = list(scripture.search(bible, self.location).items())[0]
-        text = "".join(verses["scripture"].to_list())
-        message.text = padding + text + f"\n{loc:>25}"
+        loc, bv_list = list(scripture.search(bible, self.location).items())[0]
+        message.text = padding + "".join(bv.scripture for bv in bv_list) + f"\n{loc:>30}"
 
         return ppt
 
@@ -208,7 +207,7 @@ def mvccc_slides() -> List:
         Message(
             """惟耶和華在他的聖殿中；全地的人，都當在他面前肅敬靜默。
 
-            哈巴谷書 2:20"""
+                    哈巴谷書 2:20"""
         ),
     ]
     slides.append(Hymn("聖哉聖哉聖哉"))
