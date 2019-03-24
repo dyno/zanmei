@@ -76,6 +76,11 @@ ifdef VERSE
 else
 	$(PYTHON) scripture.py
 endif
+
+scripture_compare:
+	$(PYTHON) scripture.py --bible_source=ibibles.net --bible_text=download/cut/books.txt --bible_index $(VERSE)
+	$(PYTHON) scripture.py --bible_source=bible.cloud --bible_text=download/CMNUNV.epub --bible_index $(VERSE)
+
 #-------------------------------------------------------------------------------
 # development related
 
