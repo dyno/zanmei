@@ -223,6 +223,7 @@ def mvccc_slides() -> List:
     slides.append(Section("讀  經"))
     slides.append(Scripture(FLAGS.scripture))
     slides.append(Memorize(FLAGS.memorize))
+    slides.append(Blank())
 
     slides.append(Section("獻  詩"))
     if FLAGS.hymns:
