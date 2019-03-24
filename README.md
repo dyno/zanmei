@@ -3,6 +3,7 @@
 ### 按模板製作ppt
 
 ```bash
+$ make init # do it once
 $ cat services/2019-03-24.flags
 --choir=236_大哉聖哉耶穌尊名2
 
