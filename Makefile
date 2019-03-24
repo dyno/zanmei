@@ -7,9 +7,19 @@ WITH_VENV :=
 endif
 PYTHON := $(WITH_VENV) python
 
-OPT := -v 1
+UNAME := $(shell uname -s)
+ifeq ($(UNAME),Linux)
+    date = date
+endif
+ifeq ($(UNAME),Darwin)
+    date = gdate
+endif
 
-SUNDAY := $(shell gdate -d "next sunday" +"%Y-%m-%d")
+#-------------------------------------------------------------------------------
+# brew install coreutils
+SUNDAY := $(shell $(date) -d "next sunday" +"%Y-%m-%d")
+
+OPT := -v 1
 
 #-------------------------------------------------------------------------------
 # online resources
@@ -26,20 +36,20 @@ hoctoga:
 hoc5:
 	$(PYTHON) hoc5.py $(OPT)
 
-
 .PHONY: mvccc
 mvccc:
 	$(PYTHON) mvccc.py $(OPT)
-
 
 .PHONY: stats
 stats:
 	$(PYTHON) stats.py $(OPT)
 
 ibibles.net:
-	cd download && curl -L -O http://download.ibibles.net/cut.zip && unzip cut.zip
+	# download/cut/books.txt
+	cd download && curl -L -O http://download.ibibles.net/cut.zip && unzip -o cut.zip
 
 bible.cloud:
+	# download/CMNUNV.epub
 	cd download && curl -L -O https://bible.cloud/ebooks/epub/CMNUNV.epub
 	cd download && curl -L -O https://bible.cloud/ebooks/epub/CMNUN1.epub
 
@@ -81,3 +91,5 @@ poetry-install:
 
 poetry-update:
 	poetry update
+
+init: poetry-update download
