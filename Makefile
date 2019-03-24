@@ -86,10 +86,13 @@ test:
 ipython:
 	poetry run ipython
 
+install-poetry:
+	pip install poetry
+
 poetry-install:
 	poetry install
 
 poetry-update:
 	poetry update
 
-init: poetry-update download
+init: install-poetry poetry-update download
