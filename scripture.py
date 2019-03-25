@@ -41,6 +41,9 @@ def from_ibibles_net(filename: str) -> Bible:
                 continue
             try:
                 parts = line.split(maxsplit=4)
+                if len(parts) != 5:
+                    log.warning(f"line='{line}' looks missing scripture...")
+                    continue
                 book = parts[2].replace("列王記", "列王紀").replace("創世紀", "創世記")
                 chapter, verse = map(int, parts[3].split(":"))
                 yield BibleVerse(book, chapter, verse, parts[-1])
@@ -135,6 +138,10 @@ def from_bible_cloud(filename: str) -> Bible:
 
     df.set_index(["book", "chapter", "verse"], inplace=True)
     df.index = pd.MultiIndex.from_tuples(df.index)
+
+    # errata
+    df.loc[("啟示錄", 12, 17), "scripture"] = df.loc[("啟示錄", 12, 17), "scripture"] + df.loc[("啟示錄", 12, 18), "scripture"]
+    df.drop(("啟示錄", 12, 18), inplace=True)
 
     return Bible("上帝", df)
 
