@@ -5,13 +5,14 @@
 from datetime import date, timedelta
 from pathlib import Path
 from pprint import pformat
-from typing import Generator, List, Tuple
+from typing import Dict, Generator, List, Tuple
 
 import attr
 from absl import app, flags, logging as log
 
 import scripture
 from pptx import Presentation
+from scripture import BibleVerse
 
 flags.DEFINE_bool("extract_only", False, "extract text from pptx")
 flags.DEFINE_string("pptx", "", "The pptx")
@@ -146,16 +147,24 @@ class Section:
 @attr.s
 class Scripture:
     locations: str = attr.ib()
+    loc_verses: Dict[str, List[BibleVerse]] = attr.ib(init=False)
+
+    def __attrs_post_init__(self):
+        bible = scripture.scripture()
+        result = scripture.search(bible, self.locations)
+        for loc, verses in result.items():
+            log.info(f"loc={self.locations}, verses=\n{pformat(verses)}")
+        self.loc_verses = result
 
     def add_to(self, ppt: Presentation, padding="  ") -> Presentation:
         bible = scripture.scripture()
-        for loc, verses in scripture.search(bible, self.locations).items():
+        for loc, verses in self.loc_verses.items():
             for idx, bv in enumerate(verses):
                 if idx % 2 == 0:
                     slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_SCRIPTURE])
                 title, message = slide.placeholders
                 title.text = loc
-                message.text += (padding if idx % 2 == 0 else "\n") + f"{bv.verse}\u3000{bv.text}"  # verse: scripture
+                message.text += (padding if idx % 2 == 0 else "\n") + f"{bv.verse}\u3000{bv.text}"
 
         return ppt
 
@@ -163,16 +172,21 @@ class Scripture:
 @attr.s
 class Memorize:
     location: str = attr.ib()
+    verses: List[BibleVerse] = attr.ib(init=False)
+
+    def __attrs_post_init__(self):
+        bible = scripture.scripture()
+        result = scripture.search(bible, self.location)
+        assert len(result) == 1, "There should be only one location for memorized verse"
+        for loc, verses in result.items():
+            log.info(f"loc={loc}, verses=\n{pformat(verses)}")
+            self.verses = verses
 
     def add_to(self, ppt: Presentation, padding="\u3000\u3000") -> Presentation:
         slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_MEMORIZE])
         title, message = slide.placeholders
-
         title.text = "本週金句"
-
-        bible = scripture.scripture()
-        loc, bv_list = list(scripture.search(bible, self.location).items())[0]
-        message.text = padding + "".join(bv.text for bv in bv_list) + f"\n{loc:>30}"
+        message.text = padding + "".join(bv.text for bv in self.verses) + f"\n{self.location:>30}"
 
         return ppt
 
@@ -211,8 +225,8 @@ def mvccc_slides() -> List:
     slides.append(Hymn("聖哉聖哉聖哉"))
 
     slides.append(Section("頌  讚"))
-    if FLAGS.choir:
-        slides.append(Hymn(FLAGS.choir))
+    if FLAGS.hymns:
+        slides.extend(list(map(Hymn, FLAGS.hymns)))
 
     slides.append(Section("宣  召"))
     slides.append(Section("祈  禱"))
@@ -223,8 +237,8 @@ def mvccc_slides() -> List:
     slides.append(Blank())
 
     slides.append(Section("獻  詩"))
-    if FLAGS.hymns:
-        slides.extend(map(Hymn, FLAGS.hymns))
+    if FLAGS.choir:
+        slides.append(Hymn(FLAGS.choir))
 
     slides.append(Teaching("信息", f"「{FLAGS.message}」", f"{FLAGS.messager}"))
 
