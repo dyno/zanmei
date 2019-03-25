@@ -182,7 +182,7 @@ def from_bible_cloud(filename: str) -> Bible:
             def to_bible_verse(book, chapter, verse, text, ft_notes):
                 chv = f"{chapter}:{verse}"
                 if chv in ft_notes:
-                    notes = ["（{note}）" if note else "" for note in ft_notes[chv]]
+                    notes = [f"（{note}）" if note else "" for note in ft_notes[chv]]
                     text = text.replace("*", "{}").format(*notes)
                 return BibleVerse(book, chapter, verse, text)
 
