@@ -139,10 +139,6 @@ def from_bible_cloud(filename: str) -> Bible:
     df.set_index(["book", "chapter", "verse"], inplace=True)
     df.index = pd.MultiIndex.from_tuples(df.index)
 
-    # errata
-    df.loc[("啟示錄", 12, 17), "scripture"] = df.loc[("啟示錄", 12, 17), "scripture"] + df.loc[("啟示錄", 12, 18), "scripture"]
-    df.drop(("啟示錄", 12, 18), inplace=True)
-
     return Bible("上帝", df)
 
 
