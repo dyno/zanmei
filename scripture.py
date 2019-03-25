@@ -235,7 +235,7 @@ def from_bible_cloud(filename: str) -> Bible:
 
 
 @lru_cache()
-def scripture(filename=None, source=None):
+def scripture(filename=None, source=None) -> Bible:
     if filename is None:
         filename = FLAGS.bible_text
     if source is None:
