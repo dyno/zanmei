@@ -155,9 +155,7 @@ class Scripture:
                     slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_SCRIPTURE])
                 title, message = slide.placeholders
                 title.text = loc
-                message.text += (
-                    padding if idx % 2 == 0 else "\n"
-                ) + f"{bv.verse}\u3000{bv.scripture}"  # verse: scripture
+                message.text += (padding if idx % 2 == 0 else "\n") + f"{bv.verse}\u3000{bv.text}"  # verse: scripture
 
         return ppt
 
@@ -174,7 +172,7 @@ class Memorize:
 
         bible = scripture.scripture()
         loc, bv_list = list(scripture.search(bible, self.location).items())[0]
-        message.text = padding + "".join(bv.scripture for bv in bv_list) + f"\n{loc:>30}"
+        message.text = padding + "".join(bv.text for bv in bv_list) + f"\n{loc:>30}"
 
         return ppt
 
