@@ -224,11 +224,12 @@ def mvccc_slides() -> List:
     ]
     slides.append(Hymn("聖哉聖哉聖哉"))
 
+    slides.append(Section("宣  召"))
+
     slides.append(Section("頌  讚"))
     if FLAGS.hymns:
         slides.extend(list(map(Hymn, FLAGS.hymns)))
 
-    slides.append(Section("宣  召"))
     slides.append(Section("祈  禱"))
 
     slides.append(Section("讀  經"))
