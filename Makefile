@@ -12,11 +12,11 @@ ifeq ($(UNAME),Linux)
     date = date
 endif
 ifeq ($(UNAME),Darwin)
+    # brew install coreutils
     date = gdate
 endif
 
 #-------------------------------------------------------------------------------
-# brew install coreutils
 SUNDAY := $(shell $(date) -d "next sunday" +"%Y-%m-%d")
 
 OPT := -v 1
