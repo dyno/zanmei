@@ -45,13 +45,10 @@ stats:
 	$(PYTHON) stats.py $(OPT)
 
 ibibles.net:
-	# download/cut/books.txt
-	cd download && curl -L -O http://download.ibibles.net/cut.zip && unzip -o cut.zip
+	[ -e download/cut/books.txt ] || (cd download && curl -L -O http://download.ibibles.net/cut.zip && unzip -o cut.zip)
 
 bible.cloud:
-	# download/CMNUNV.epub
-	cd download && curl -L -O https://bible.cloud/ebooks/epub/CMNUNV.epub
-	cd download && curl -L -O https://bible.cloud/ebooks/epub/CMNUN1.epub
+	[ -e download/CMNUNV.epub ] || (cd download && curl -L -O https://bible.cloud/ebooks/epub/CMNUNV.epub)
 
 download: zanmei hoctoga hoc5 mvccc ibibles.net bible.cloud
 
