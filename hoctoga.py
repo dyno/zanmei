@@ -9,9 +9,9 @@ from urllib.parse import urlparse
 from zipfile import ZipFile
 
 from absl import app, logging as log
-from bs4 import BeautifulSoup
 
 from aiohttp import ClientSession
+from bs4 import BeautifulSoup
 from comm import TOTAL, fetch, init_logging, zip_blank_lines
 
 LYRICS_URL_TEMPLATE = "http://www.hoctoga.org/Chinese/lyrics/hymn/hymn-{idx:03d}.htm"
@@ -64,7 +64,7 @@ async def download_and_extract_ppt(ppt_zip_link, index):
         if status == 200:
             with ppt_zip_path.open("wb") as out:
                 out.write(content)
-        elif status == 404:
+        elif status in (404, 503):
             log.warn(f"write {ppt_missing_path}. stop.")
             ppt_missing_path.open("wb").close()
             return
@@ -98,7 +98,7 @@ async def download_lyrics_with_ppt(session: ClientSession, idx: int):
             if status == 200:
                 with lyrics_path.open("wb") as out:
                     out.write(content)
-            elif status == 404:
+            elif status in (404, 503):
                 lyrics_missing_path.open("wb").close()
                 log.warn(f"write {lyrics_missing_path}. continue.")
                 return
