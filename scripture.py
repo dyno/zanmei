@@ -2,15 +2,15 @@
 
 import re
 import warnings
-from collections import OrderedDict, defaultdict, namedtuple
+from collections import OrderedDict, defaultdict
 from functools import lru_cache
-from itertools import islice
 from pathlib import Path
 from typing import Dict, Generator, List, NamedTuple, TextIO
 from zipfile import ZipFile
 
 import pandas as pd
 from absl import app, flags, logging as log
+
 from bs4 import BeautifulSoup
 
 flags.DEFINE_string("bible_text", "download/CMNUNV.epub", "see Makefile for source of download")
@@ -41,7 +41,7 @@ class ScriptureIndex(NamedTuple):
 
 def parse_locations(locations: str) -> Dict[str, ScriptureIndex]:
     "parse locations to Dict[loc, ScriptIndex]"
-    result = OrderedDict()
+    result: Dict[str, ScriptureIndex] = OrderedDict()
 
     loc_list = re.split(r"[;；]", locations)
     prev_book = None
@@ -105,7 +105,7 @@ def from_ibibles_net(filename: str) -> Bible:
                 book = parts[2].replace("列王記", "列王紀").replace("創世紀", "創世記")
                 chapter, verse = map(int, parts[3].split(":"))
                 yield BibleVerse(book, chapter, verse, parts[-1])
-            except Exception as e:
+            except Exception:
                 log.exception(f"exception processing line: {line}")
 
     cache = Path(filename + ".csv")
@@ -156,7 +156,7 @@ def from_bible_cloud(filename: str) -> Bible:
             # </p></aside>
 
             ft_notes: Dict[str, List[str]] = defaultdict(list)
-            ft_verses: Dict[str, str] = defaultdict(list)
+            ft_verses: Dict[str, str] = {}
 
             for aside in book_root.find_all("aside"):
                 chv = aside.find("a").text.strip(" *:")
@@ -186,7 +186,7 @@ def from_bible_cloud(filename: str) -> Bible:
                     text = text.replace("*", "{}").format(*notes)
                 return BibleVerse(book, chapter, verse, text)
 
-            collector = []
+            collector: List[str] = []
             for div in book_root.find_all("div", class_=lambda klass: klass in ["p", "q", "m"]):
                 for c in div.children:
                     try:
@@ -249,7 +249,7 @@ def search(bible: Bible, locations: str, word_god=None) -> Dict[str, List[BibleV
         word_god = FLAGS.bible_word_god
     loc_list = parse_locations(locations)
 
-    result = OrderedDict()
+    result: Dict[str, List[BibleVerse]] = OrderedDict()
     for loc, scripture_index in loc_list.items():
         df = bible.df.loc[scripture_index]
         verses = []
