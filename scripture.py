@@ -62,10 +62,7 @@ class Bible:
 
 def _postprocess_cleanup(df: pd.DataFrame) -> pd.DataFrame:
     df["chv"] = df["chapter"] * 1000 + df["verse"]
-    df.set_index(["book", "chv"], inplace=True)
-    df.index = pd.MultiIndex.from_tuples(df.index)
-    df.index.names = ["book", "chv"]
-    return df.sort_index().dropna()
+    return df.set_index(["book", "chv"]).sort_index().dropna()
 
 
 def from_ibibles_net(filename: str) -> Bible:
@@ -102,7 +99,6 @@ def from_ibibles_net(filename: str) -> Bible:
             df.to_csv(cache, sep="\t", index=False)
 
     df = _postprocess_cleanup(df)
-
     return Bible("\u3000神", df)
 
 
@@ -206,7 +202,6 @@ def from_bible_cloud(filename: str) -> Bible:
             df.to_csv(cache, sep="\t", index=False)
 
     df = _postprocess_cleanup(df)
-
     return Bible("上帝", df)
 
 
