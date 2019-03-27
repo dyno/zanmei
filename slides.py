@@ -13,6 +13,7 @@ from absl import app, flags, logging as log
 import scripture
 from pptx import Presentation
 from scripture import BibleVerse
+from thebible import parse_citations
 
 flags.DEFINE_bool("extract_only", False, "extract text from pptx")
 flags.DEFINE_string("pptx", "", "The pptx")
@@ -146,24 +147,23 @@ class Section:
 
 @attr.s
 class Scripture:
-    locations: str = attr.ib()
-    loc_verses: Dict[str, List[BibleVerse]] = attr.ib(init=False)
+    citations: str = attr.ib()
+    cite_verses: Dict[str, List[BibleVerse]] = attr.ib(init=False)
 
     def __attrs_post_init__(self):
         bible = scripture.scripture()
-        result = scripture.search(bible, self.locations)
-        for loc, verses in result.items():
-            log.info(f"loc={self.locations}, verses=\n{pformat(verses)}")
-        self.loc_verses = result
+        result = bible.search(parse_citations(self.citations).items())
+        for cite, verses in result.items():
+            log.info(f"citation={cite}, verses=\n{pformat(verses)}")
+        self.cite_verses = result
 
     def add_to(self, ppt: Presentation, padding="  ") -> Presentation:
-        bible = scripture.scripture()
-        for loc, verses in self.loc_verses.items():
+        for cite, verses in self.cite_verses.items():
             for idx, bv in enumerate(verses):
                 if idx % 2 == 0:
                     slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_SCRIPTURE])
                 title, message = slide.placeholders
-                title.text = loc
+                title.text = cite
                 message.text += (padding if idx % 2 == 0 else "\n") + f"{bv.verse}\u3000{bv.text}"
 
         return ppt
@@ -171,22 +171,23 @@ class Scripture:
 
 @attr.s
 class Memorize:
-    location: str = attr.ib()
+    citation: str = attr.ib()
     verses: List[BibleVerse] = attr.ib(init=False)
 
     def __attrs_post_init__(self):
         bible = scripture.scripture()
-        result = scripture.search(bible, self.location)
-        assert len(result) == 1, "There should be only one location for memorized verse"
-        for loc, verses in result.items():
-            log.info(f"loc={loc}, verses=\n{pformat(verses)}")
+        book_citation_list = parse_citations(self.citation).items()
+        result = bible.search(book_citation_list)
+        assert len(result) == 1, "There should be only one citation for memorized verse"
+        for cite, verses in result.items():
+            log.info(f"citation={cite}, verses=\n{pformat(verses)}")
             self.verses = verses
 
     def add_to(self, ppt: Presentation, padding="\u3000\u3000") -> Presentation:
         slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_MEMORIZE])
         title, message = slide.placeholders
         title.text = "本週金句"
-        message.text = padding + "".join(bv.text for bv in self.verses) + f"\n{self.location:>30}"
+        message.text = padding + "".join(bv.text for bv in self.verses) + f"\n{self.citation:>30}"
 
         return ppt
 

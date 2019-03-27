@@ -2,23 +2,6 @@ import re
 from collections import OrderedDict
 from typing import Dict, List, NamedTuple
 
-import attr
-import pandas as pd
-
-
-@attr.s
-class Bible:
-    word_god: str
-    df: pd.DataFrame
-
-
-# defined for construct
-class BibleVerse(NamedTuple):
-    book: str
-    chapter: int
-    verse: int
-    text: str
-
 
 # defined for search
 class VerseLoc(NamedTuple):
@@ -69,7 +52,7 @@ def parse_citations(citations: str) -> Dict[str, BookCitations]:
         # 2. citations
         # 11:12-15,19 => Citation((11,12), (11,15)) Citation((11,19),(11,19))
         # 11:12-13:15,19 => Citation((11,12), (13,15)) Citation((13,19),(13,19))
-        prev_chapter = None
+        prev_chapter = -1
         cite_list: List[Citation] = []
         for cite in cites.split(","):
             parts = cite.split("-")

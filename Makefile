@@ -69,14 +69,14 @@ endif
 .PHONY: scripture
 scripture:
 ifdef VERSE
-	$(PYTHON) scripture.py --bible_index "$(VERSE)"
+	$(PYTHON) scripture.py --bible_citations "$(VERSE)"
 else
 	$(PYTHON) scripture.py
 endif
 
 scripture_compare:
-	$(PYTHON) scripture.py --bible_source=ibibles.net --bible_text=download/cut/books.txt --bible_index "$(VERSE)"
-	$(PYTHON) scripture.py --bible_source=bible.cloud --bible_text=download/CMNUNV.epub --bible_index "$(VERSE)"
+	$(PYTHON) scripture.py --bible_source=ibibles.net --bible_text=download/cut/books.txt --bible_citations "$(VERSE)"
+	$(PYTHON) scripture.py --bible_source=bible.cloud --bible_text=download/CMNUNV.epub --bible_citations "$(VERSE)"
 
 #-------------------------------------------------------------------------------
 # development related

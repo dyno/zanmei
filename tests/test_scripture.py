@@ -1,10 +1,8 @@
-from collections import OrderedDict
-
 import pandas as pd
 from absl import flags
 
 import pytest
-from scripture import ScriptureIndex, from_bible_cloud, from_ibibles_net, parse_locations
+from scripture import from_bible_cloud, from_ibibles_net
 
 FLAGS = flags.FLAGS
 
@@ -12,55 +10,6 @@ FLAGS = flags.FLAGS
 @pytest.fixture(autouse=True)
 def init():
     FLAGS(["program"])
-
-
-def test_parse_locations():
-    # TODO: simplify it to (chapter,verse) as it is increased in one way.
-    # and then you can do search like 3:10-4:9
-    r = parse_locations("撒母耳記上 17:31-49")  # 2019-02-24
-    assert r == OrderedDict(
-        [
-            (
-                "撒母耳記上17:31-49",
-                ScriptureIndex(
-                    book="撒母耳記上",
-                    chapter=17,
-                    verses=[31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49],
-                ),
-            )
-        ]
-    )
-    r = parse_locations("哥林多前書 6:12-13;10:23-24、31")  # 2019-03-03
-    assert r == OrderedDict(
-        [
-            ("哥林多前書6:12-13", ScriptureIndex(book="哥林多前書", chapter=6, verses=[12, 13])),
-            ("哥林多前書10:23-24,31", ScriptureIndex(book="哥林多前書", chapter=10, verses=[23, 24, 31])),
-        ]
-    )
-    r = parse_locations("約翰壹書 2:20, 24-27")  # 2019-03-10
-    assert r == OrderedDict([("約翰壹書2:20,24-27", ScriptureIndex(book="約翰壹書", chapter=2, verses=[20, 24, 25, 26, 27]))])
-    r = parse_locations("馬可福音 10:32-45")  # 2019-03-17
-    assert r == OrderedDict(
-        [
-            (
-                "馬可福音10:32-45",
-                ScriptureIndex(
-                    book="馬可福音", chapter=10, verses=[32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]
-                ),
-            )
-        ]
-    )
-    r = parse_locations("馬太福音 25：14-30")  # 2019-03-24
-    assert r == OrderedDict(
-        [
-            (
-                "馬太福音25:14-30",
-                ScriptureIndex(
-                    book="馬太福音", chapter=25, verses=[14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
-                ),
-            )
-        ]
-    )
 
 
 def test_bible_basics():
