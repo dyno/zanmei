@@ -187,7 +187,7 @@ class Memorize:
         slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_MEMORIZE])
         title, message = slide.placeholders
         title.text = "本週金句"
-        message.text = padding + "".join(bv.text for bv in self.verses) + f"\n{self.citation:>30}"
+        message.text = padding + "".join(bv.text for bv in self.verses) + f"\n\n{self.citation:>35}"
 
         return ppt
 
