@@ -3,6 +3,7 @@ from absl import flags
 
 import pytest
 from scripture import from_bible_cloud, from_ibibles_net
+from thebible import parse_citations
 
 FLAGS = flags.FLAGS
 
@@ -42,3 +43,12 @@ def test_bible_basics():
 
         diff.index = diff.index.to_flat_index()
         assert diff.index.size == 6
+
+
+def test_bible_search():
+    bc = from_bible_cloud("download/CMNUNV.epub")
+    result = bc.search(parse_citations("利未記23:10-11,15-17").items())
+    verses = result["利未記23:10-11,15-17"]
+
+    assert len(result) == 1
+    assert len(verses) == 5
