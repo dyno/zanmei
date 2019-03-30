@@ -97,3 +97,20 @@ def test_parse_citations():
             )
         ]
     )
+
+    # http://israelmega.com/shavuot/
+    r = parse_citations("利未記25：10-11，15-17")
+    assert r == OrderedDict(
+        [
+            (
+                "利未記25:10-11,15-17",
+                BookCitations(
+                    book="利未記",
+                    citations=[
+                        Citation(start=VerseLoc(chapter=25, verse=10), end=VerseLoc(chapter=25, verse=11)),
+                        Citation(start=VerseLoc(chapter=25, verse=15), end=VerseLoc(chapter=25, verse=17)),
+                    ],
+                ),
+            )
+        ]
+    )

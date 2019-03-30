@@ -47,10 +47,10 @@ class Bible:
         result: Dict[str, List[BibleVerse]] = OrderedDict()
         for cite_str, book_citations in book_citation_list:
             book, cite_list = book_citations
+            verses = []
             for cite in cite_list:
                 df = self.df.loc[(book,), :]
                 df = df[(df.index >= to_index(cite.start)) & (df.index <= to_index(cite.end))]
-                verses = []
                 for t in df.itertuples():
                     text = t.text.replace(self.word_god, word_god) if self.word_god != word_god else t.text
                     verses.append(BibleVerse(book, t.chapter, t.verse, text))

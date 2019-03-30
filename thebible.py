@@ -50,8 +50,9 @@ def parse_citations(citations: str) -> Dict[str, BookCitations]:
             book_cites = book + cites
 
         # 2. citations
-        # 11:12-15,19 => Citation((11,12), (11,15)) Citation((11,19),(11,19))
-        # 11:12-13:15,19 => Citation((11,12), (13,15)) Citation((13,19),(13,19))
+        # 11:12-15,19 => Citation((11,12), (11,15)), Citation((11,19),(11,19))
+        # 11:12-13:15,19 => Citation((11,12), (13,15)), Citation((13,19),(13,19))
+        # 23:10-11,15-17 => Citation((23,10), (23,11)), Citation((23,15),(23,17))
         prev_chapter = -1
         cite_list: List[Citation] = []
         for cite in cites.split(","):
