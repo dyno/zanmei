@@ -35,7 +35,7 @@ poetry run python slides.py --extract_only --pptx processed/mvccc/聖哉聖哉�
 ### 聖經按章節範圍查找
 
 ```bash
-$ make scripture VERSE="羅馬書12：1-2"
+$ make scripture VERSES="羅馬書12：1-2"
 poetry run python scripture.py --bible_index 羅馬書12：1-2
 羅馬書12:1-2
   1 所以弟兄們、我以　神的慈悲勸你們、將身體獻上、當作活祭、是聖潔的、是　神所喜悅的．你們如此事奉、乃是理所當然的。
