@@ -30,7 +30,7 @@ flags.DEFINE_string("memorize", "", "The bible scripture to memorize")  # verse 
 flags.DEFINE_string("message", "", "The message")
 flags.DEFINE_string("messager", "", "The messager")
 
-flags.DEFINE_bool("communion", False, "Whether to have communion")
+flags.DEFINE_bool("communion", None, "Whether to have communion")
 
 FLAGS = flags.FLAGS
 
@@ -39,8 +39,10 @@ PROCESSED = Path("processed")
 # ------------------------------------------------------------------------------
 
 
-def next_sunday() -> str:
-    today = date.today()
+def next_sunday(today: date = None) -> str:
+    # FIXME: this function is not used.
+    if today is None:
+        today = date.today()
     sunday = today + timedelta(6 - today.weekday())
     return sunday.isoformat()
 
@@ -252,13 +254,14 @@ def mvccc_slides() -> List:
         slides.append(Hymn(FLAGS.offering))
 
     slides.append(Section("奉 獻 禱 告"))
+
+    if FLAGS.communion:
+        slides.append(Section("聖  餐"))
+
     slides.append(Section("歡 迎 您"))
     slides.append(Section("家 事 分 享"))
 
     slides.append(Hymn("三一頌"))
-
-    if FLAGS.communion:
-        slides.append(Section("聖  餐"))
 
     slides.append(Section("祝  福"))
     slides.append(Section("默  禱"))
