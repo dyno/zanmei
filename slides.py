@@ -110,6 +110,15 @@ class Hymn:
         ptn = f"**/*{self.index}*.pptx"
         glob = PROCESSED.glob(ptn)
         found = list(glob)
+        # interchangeability characters
+        for w1, w2 in [("你", "袮"), ("寶", "寳"), ("他", "祂")]:
+            if found:
+                break
+            if w1 in ptn:
+                ptn = ptn.replace(w1, w2)
+                glob = PROCESSED.glob(ptn)
+                found = list(glob)
+
         assert found, f"can not find anything match {ptn}."
         if len(found) > 1:
             log.warn(f"found more than 1 files for {ptn}. {[p.as_posix() for p in found]}")
