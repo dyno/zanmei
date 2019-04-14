@@ -115,8 +115,7 @@ class Hymn:
             if found:
                 break
             if w1 in ptn:
-                ptn = ptn.replace(w1, w2)
-                glob = PROCESSED.glob(ptn)
+                glob = PROCESSED.glob(ptn.replace(w1, w2))
                 found = list(glob)
 
         assert found, f"can not find anything match {ptn}."
