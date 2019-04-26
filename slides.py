@@ -111,7 +111,7 @@ class Hymn:
         glob = PROCESSED.glob(ptn)
         found = list(glob)
         # interchangeability characters
-        for w1, w2 in [("你", "袮"), ("寶", "寳"), ("他", "祂")]:
+        for w1, w2 in [("你", "祢"), ("你", "袮"), ("寶", "寳"), ("他", "祂")]:
             if found:
                 break
             if w1 in ptn:
