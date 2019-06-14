@@ -110,13 +110,21 @@ class Hymn:
         ptn = f"**/*{self.index}*.pptx"
         glob = PROCESSED.glob(ptn)
         found = list(glob)
-        # interchangeability characters
-        for w1, w2 in [("你", "祢"), ("你", "袮"), ("寶", "寳"), ("他", "祂")]:
-            if found:
-                break
-            if w1 in ptn:
-                glob = PROCESSED.glob(ptn.replace(w1, w2))
-                found = list(glob)
+
+        if not found:
+            # interchangeability characters
+            interchangebles = [("你", "祢", "袮"), ("寶", "寳"), ("他", "祂"), ("于", "於")]
+            for t in interchangebles:
+                for w in t:
+                    if w not in ptn:
+                        continue
+                    for w1 in t:
+                        if w == w1:
+                            continue
+                        glob = PROCESSED.glob(ptn.replace(w, w1))
+                        found = list(glob)
+                        if found:
+                            break
 
         assert found, f"can not find anything match {ptn}."
         if len(found) > 1:
