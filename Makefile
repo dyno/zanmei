@@ -88,13 +88,20 @@ test:
 ipython:
 	poetry run ipython
 
+.PHONY: install-poetry
 install-poetry:
-	pip install poetry
+	$$(command -v poetry) || pip install poetry
 
-poetry-install:
+.PHONY: poetry-config
+poetry-config: poetry-config
+	poetry config settings.virtualenvs.in-project true
+
+.PHONY: poetry-install
+poetry-install: poetry-config
 	poetry install
 
-poetry-update:
+.PHONY: poetry-update
+poetry-update: poetry-config
 	poetry update
 
 init: install-poetry poetry-update download

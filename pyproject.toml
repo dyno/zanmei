@@ -18,10 +18,12 @@ lxml = "*"
 pandas = "*"
 python-pptx = "*"
 requests = "*"
+streamlit = ">=0.48.1"
 tqdm = "*"
 
 [tool.poetry.dev-dependencies]
 ipython = "*"
+jupyter = "*"
 pytest = "*"
 
 [tool.black]
