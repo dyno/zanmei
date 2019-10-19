@@ -93,7 +93,7 @@ install-poetry:
 	$$(command -v poetry) || pip install poetry
 
 .PHONY: poetry-config
-poetry-config: poetry-config
+poetry-config:
 	poetry config settings.virtualenvs.in-project true
 
 .PHONY: poetry-install
