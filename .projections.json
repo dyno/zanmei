@@ -1,8 +1,14 @@
 {
-  "*.py": {
-    "alternate": "tests/test_{}.py"
+  "bible/*.py": {
+    "alternate": "tests/bible/test_{}.py"
   },
-  "tests/test_*.py": {
-    "alternate": "{}.py"
+  "tests/bible/test_*.py": {
+    "alternate": "bible/{}.py"
+  },
+  "hymns/*.py": {
+    "alternate": "tests/hymns/test_{}.py"
+  },
+  "tests/hymns/test_*.py": {
+    "alternate": "hymns/{}.py"
   }
 }

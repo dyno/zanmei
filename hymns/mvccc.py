@@ -4,19 +4,18 @@
 
 import asyncio
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 from urllib.parse import urlparse
 
 import attr
-from absl import app, logging as log
+from absl import app, flags, logging as log
+from aiohttp import ClientSession
 from bs4 import BeautifulSoup
 
-from aiohttp import ClientSession
-from comm import fetch, init_logging
+from hymns import fetch
 
+FLAGS = flags.FLAGS
 HYMNS_INDEX_URL = "http://mvcccit.org/Legacy/chinese/?content=it/song.htm"
-DOWNLOAD = Path("download/mvccc")
-PROCESSED = Path("processed/mvccc")
 
 
 @attr.s
@@ -24,16 +23,24 @@ class Hymn:
     name: str = attr.ib()
     no: str = attr.ib()
     url: str = attr.ib()
-    filepath: Path = attr.ib(init=False)
-
-    def __attrs_post_init__(self):
-        assert self.url.endswith(".pptx")
-        self.filepath = PROCESSED / f"{self.no}_{self.name}.pptx"
 
 
-async def index(session: ClientSession, url: str) -> List[Hymn]:
+def _path(hymn: Hymn, download_basepath: Optional[Path] = None) -> Path:
+    if download_basepath is None:
+        download_basepath = Path(FLAGS.download_basedir)
+
+    assert hymn.url.endswith(".pptx")
+    path = download_basepath / f"{hymn.no}_{hymn.name}.pptx"
+
+    return path
+
+
+async def index(session: ClientSession, url: str, download_basepath: Optional[Path] = None) -> List[Hymn]:
+    if download_basepath is None:
+        download_basepath = Path(FLAGS.download_basedir)
+
     t = urlparse(url)
-    index_path = DOWNLOAD / Path(t.path).name
+    index_path = download_basepath / Path(t.path).name
     # check cache, if exists use cache
     if index_path.exists():
         log.info(f"{index_path} exists and use it as cache.")
@@ -64,36 +71,39 @@ async def index(session: ClientSession, url: str) -> List[Hymn]:
     return hymns
 
 
-async def download(session: ClientSession, hymn: Hymn):
-    if hymn.filepath.exists():
-        log.debug(f"{hymn.filepath} is already downloaded.")
+async def download(session: ClientSession, hymn: Hymn) -> None:
+    if _path(hymn).exists():
+        log.debug(f"{_path(hymn)} is already downloaded.")
         return
 
-    log.debug(f"downloading to {hymn.filepath} ...")
+    log.debug(f"downloading to {_path(hymn)} ...")
     try:
         status, content = await fetch(session, hymn.url)
         assert status == 200
-        with hymn.filepath.open("wb") as f:
+        with _path(hymn).open("wb") as f:
             f.write(content)
     except AssertionError:
-        log.exception(f"failed to download {hymn.filepath}")
+        log.exception(f"failed to download {_path(hymn)}")
 
 
-async def download_pptx():
+async def download_pptx() -> None:
     async with ClientSession() as session:
         hymns = await index(session, HYMNS_INDEX_URL)
         tasks = [download(session, hymn) for hymn in hymns]
         await asyncio.wait(tasks)
 
 
-def main(argv):
-    del argv
-    DOWNLOAD.mkdir(exist_ok=True, parents=True)
-    init_logging()
-
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(download_pptx())
-
-
 if __name__ == "__main__":
+    from base import initialize_logging
+
+    flags.DEFINE_string("download_basedir", "download/mvccc", "basedir of downloaded files")
+
+    def main(_):
+        initialize_logging()
+        download_basepath = Path(FLAGS.download_basedir)
+        download_basepath.mkdir(exist_ok=True, parents=True)
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(download_pptx())
+
     app.run(main)

@@ -5,22 +5,22 @@
 import asyncio
 import re
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 from urllib.parse import urlparse
 
 import attr
-from absl import app, logging as log
+from absl import app, flags, logging as log
+from aiohttp import ClientSession
 from bs4 import BeautifulSoup
 from hanziconv import HanziConv
 
-from aiohttp import ClientSession
-from comm import fetch, init_logging
+from hymns import fetch
 
 # 教會聖詩 Hymns for God's People
 HYMNS_INDEX_URL = "https://www.zanmeishi.com/songbook/hymns-for-gods-people.html"
 ZANMEI_HOMEPAGE = "https://www.zanmeishi.com"
 
-DOWNLOAD = Path("download/zanmei")
+FLAGS = flags.FLAGS
 
 
 @attr.s
@@ -28,15 +28,20 @@ class Hymn:
     name: str = attr.ib()
     no: int = attr.ib()
     url: str = attr.ib()
-    filepath: Path = attr.ib(init=False)
-
-    def __attrs_post_init__(self):
-        self.filepath = DOWNLOAD / f"{self.no:03d}_{self.name}.png"
 
 
-async def index(session: ClientSession, url: str) -> List[Hymn]:
+def _path(hymn: Hymn, download_basepath: Optional[Path] = None) -> Path:
+    if download_basepath is None:
+        download_basepath = Path(FLAGS.download_basedir)
+    path = download_basepath / f"{hymn.no:03d}_{hymn.name}.png"
+    return path
+
+
+async def index(session: ClientSession, url: str, download_basepath: Optional[Path] = None) -> List[Hymn]:
     t = urlparse(url)
-    index_path = DOWNLOAD / Path(t.path).name
+    if download_basepath is None:
+        download_basepath = Path(FLAGS.download_basedir)
+    index_path = download_basepath / Path(t.path).name
     # check cache, if exists use cache
     if index_path.exists():
         log.info(f"{index_path} exists and use it as cache.")
@@ -81,12 +86,12 @@ async def index(session: ClientSession, url: str) -> List[Hymn]:
     return hymns
 
 
-async def download(session: ClientSession, hymn: Hymn):
-    if hymn.filepath.exists():
-        log.debug(f"{hymn.filepath} is already downloaded.")
+async def download(session: ClientSession, hymn: Hymn) -> None:
+    if _path(hymn).exists():
+        log.debug(f"{_path(hymn)} is already downloaded.")
         return
 
-    log.debug(f"downloading to {hymn.filepath} ...")
+    log.debug(f"downloading to {_path(hymn)} ...")
     try:
         status, content = await fetch(session, hymn.url)
         assert status == 200
@@ -96,14 +101,14 @@ async def download(session: ClientSession, hymn: Hymn):
         img_url = div.a["href"]
         status, content = await fetch(session, img_url)
         assert status == 200
-        with hymn.filepath.open("wb") as f:
+        with _path(hymn).open("wb") as f:
             f.write(content)
     except AssertionError:
-        log.exception(f"failed to download {hymn.filepath}")
+        log.exception(f"failed to download {_path(hymn)}")
 
 
-def verify(filepath: Path, glob: str, total: int):
-    path_list = list(filepath.glob(glob))
+def verify(path: Path, glob: str, total: int) -> None:
+    path_list = list(path.glob(glob))
     downloaded = list(sorted(path.name.split("_", 1)[0] for path in path_list))
     expected = [f"{no:03d}" for no in range(1, total + 1)]
     missing = ["493", "494", "495"]
@@ -114,22 +119,28 @@ def verify(filepath: Path, glob: str, total: int):
     assert len(path_list) == total
 
 
-async def download_image_copy():
+async def download_image_copy(download_basepath: Optional[Path] = None) -> None:
+    if download_basepath is None:
+        download_basepath = Path(FLAGS.download_basedir)
+
     async with ClientSession() as session:
         hymns = await index(session, HYMNS_INDEX_URL)
         tasks = [download(session, hymn) for hymn in hymns]
         await asyncio.wait(tasks)
-        verify(DOWNLOAD, "*.png", len(hymns))
-
-
-def main(argv):
-    del argv
-    DOWNLOAD.mkdir(exist_ok=True, parents=True)
-    init_logging()
-
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(download_image_copy())
+        verify(download_basepath, "*.png", len(hymns))
 
 
 if __name__ == "__main__":
+    from base import initialize_logging
+
+    flags.DEFINE_string("download_basedir", "download/zanmei", "basedir of downloaded files")
+
+    def main(_):
+        download_basepath = Path(FLAGS.download_basedir)
+        download_basepath.mkdir(exist_ok=True, parents=True)
+        initialize_logging()
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(download_image_copy())
+
     app.run(main)

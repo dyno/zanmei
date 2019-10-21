@@ -1,16 +1,8 @@
 from collections import OrderedDict
 
-from absl import flags
-
 import pytest
-from thebible import BookCitations, Citation, VerseLoc, parse_citations
 
-FLAGS = flags.FLAGS
-
-
-@pytest.fixture(autouse=True)
-def init():
-    FLAGS(["program"])
+from bible.index import BookCitations, Citation, VerseLoc, parse_citations
 
 
 def test_parse_citations():

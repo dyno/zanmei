@@ -16,6 +16,13 @@ ifeq ($(UNAME),Darwin)
     date = gdate
 endif
 
+export PYTHONPATH := $(shell pwd)
+
+.DEFAULT_GOAL := test
+
+# FORCE make the target always run, https://www.gnu.org/software/make/manual/html_node/Force-Targets.html
+FORCE:
+
 #-------------------------------------------------------------------------------
 SUNDAY := $(shell $(date) -d "next sunday" +"%Y-%m-%d")
 
@@ -26,27 +33,29 @@ OPT := -v 1
 
 .PHONY: zanmei
 zanmei:
-	$(PYTHON) zanmei.py $(OPT)
+	$(PYTHON) -m hymns.zanmei $(OPT)
 
 .PHONY: hoctoga
 hoctoga:
-	$(PYTHON) hoctoga.py $(OPT)
+	$(PYTHON) -m hymns.hoctoga $(OPT)
 
 .PHONY: hoc5
 hoc5:
-	$(PYTHON) hoc5.py $(OPT)
+	$(PYTHON) -m hymns.hoc5 $(OPT)
 
 .PHONY: mvccc
 mvccc:
-	$(PYTHON) mvccc.py $(OPT)
+	$(PYTHON) -m hymns.mvccc $(OPT)
 
 .PHONY: stats
 stats:
-	$(PYTHON) stats.py $(OPT)
+	$(PYTHON) -m hymns.stats $(OPT)
 
+.PHONY: ibibles.net
 ibibles.net:
 	[ -e download/cut/books.txt ] || (cd download && curl -L -O http://download.ibibles.net/cut.zip && unzip -o cut.zip)
 
+.PHONY: bible.cloud
 bible.cloud:
 	[ -e download/CMNUNV.epub ] || (cd download && curl -L -O https://bible.cloud/ebooks/epub/CMNUNV.epub)
 
@@ -66,23 +75,35 @@ ifdef PPTX
 	$(PYTHON) slides.py --extract_only --pptx $(PPTX)
 endif
 
+streamlit:
+	$(WITH_VENV) streamlit run --server.port=5801 mvccc/slides.py
+
+#-------------------------------------------------------------------------------
+VERSES := 約翰福音3:16
+
 .PHONY: scripture
 scripture:
 ifdef VERSES
-	$(PYTHON) scripture.py --bible_citations "$(VERSES)"
+	$(PYTHON) -m bible.scripture --bible_citations "$(VERSES)"
 else
-	$(PYTHON) scripture.py
+	$(PYTHON) -m bible.scripture
 endif
 
+.PHONY: scripture_compare
 scripture_compare:
-	$(PYTHON) scripture.py --bible_source=ibibles.net --bible_text=download/cut/books.txt --bible_citations "$(VERSES)"
-	$(PYTHON) scripture.py --bible_source=bible.cloud --bible_text=download/CMNUNV.epub --bible_citations "$(VERSES)"
+	$(PYTHON) -m bible.scripture --bible_source=ibibles.net --bible_text=download/cut/books.txt --bible_citations "$(VERSES)"
+	$(PYTHON) -m bible.scripture --bible_source=bible.cloud --bible_text=download/CMNUNV.epub --bible_citations "$(VERSES)"
 
 #-------------------------------------------------------------------------------
 # development related
 
 test:
 	$(PYTHON) -m pytest --doctest-modules --capture=no --verbose
+
+# Run individual unittest file, e.g.
+# 	make tests/bible/test_index.py
+test_%.py: FORCE
+	$(PYTHON) -m pytest -v --capture=no $@
 
 .PHONY: ipython
 ipython:

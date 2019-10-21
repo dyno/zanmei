@@ -13,14 +13,14 @@ import pandas as pd
 from absl import app, flags, logging as log
 from bs4 import BeautifulSoup
 
-from thebible import BookCitations, VerseLoc, parse_citations
+from bible.index import BookCitations, VerseLoc, parse_citations
+
+FLAGS = flags.FLAGS
+
 
 flags.DEFINE_string("bible_text", "download/CMNUNV.epub", "see Makefile for source of download")
 flags.DEFINE_string("bible_source", "bible.cloud", "[ibibles.net, bible.cloud]")
-flags.DEFINE_string("bible_citations", "約翰福音3:16;14:6", "bible search by location")
 flags.DEFINE_string("bible_word_god", "\u3000神", "\u3000神 or 上帝")
-
-FLAGS = flags.FLAGS
 
 
 class BibleVerse(NamedTuple):
@@ -215,17 +215,17 @@ def scripture(filename=None, source=None) -> Bible:
     return {"ibibles.net": from_ibibles_net, "bible.cloud": from_bible_cloud}[source](filename)
 
 
-def main(argv):
-    del argv
-    book_citation_list = list(parse_citations(FLAGS.bible_citations).items())
-    bible = scripture()
-    result = bible.search(book_citation_list)
-    for loc, verses in result.items():
-        print(loc)
-        for v in verses:
-            print(f"{v.verse:>3d} {v.text}")
-        print()
-
-
 if __name__ == "__main__":
+    flags.DEFINE_string("bible_citations", "約翰福音3:16;14:6", "bible search by location")
+
+    def main(_):
+        book_citation_list = list(parse_citations(FLAGS.bible_citations).items())
+        bible = scripture()
+        result = bible.search(book_citation_list)
+        for loc, verses in result.items():
+            print(loc)
+            for v in verses:
+                print(f"{v.verse:>3d} {v.text}")
+            print()
+
     app.run(main)
