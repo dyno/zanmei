@@ -233,11 +233,11 @@ class Blank:
 
 def mvccc_slides(
     hymns: List[str],
-    choir: str,
     scripture: str,
     memorize: str,
     message: str,
     messager: str,
+    choir: str,
     response: str,
     offering: str,
     communion: bool,
@@ -318,15 +318,15 @@ def main(argv):
         return
 
     slides = mvccc_slides(
-        FLAGS.hymns,
-        FLAGS.choir,
-        FLAGS.scripture,
-        FLAGS.memorize,
-        FLAGS.message,
-        FLAGS.messager,
-        FLAGS.response,
-        FLAGS.offering,
-        FLAGS.communion,
+        hymns=FLAGS.hymns,
+        scripture=FLAGS.scripture,
+        memorize=FLAGS.memorize,
+        message=FLAGS.message,
+        messager=FLAGS.messager,
+        choir=FLAGS.choir,
+        response=FLAGS.response,
+        offering=FLAGS.offering,
+        communion=FLAGS.communion,
     )
     master = Presentation(FLAGS.master_pptx)
     ppt = to_pptx(slides, master)
