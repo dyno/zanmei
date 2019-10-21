@@ -1,59 +1,37 @@
 #!/usr/bin/env streamit
 
+import pandas as pd
+from absl import flags
+
 import streamlit as st
+from mvccc.slides import Hymn, Scripture
 
-#  --choir=我寧願有耶穌
-#
-#  --hymns=榮耀歸於天父
-#  --hymns=教會唯一的根基
-#  --hymns=愛的真諦
-#  --hymns=在每一個家庭中
-#  --response=愛使我們合一
-#  --offering=我奉獻所有
-#
-#  --scripture=哥林多前書13:4-7
-#  --memorize=箴言19:11
-#  --message=寬恕之愛
-#  --messager=卓爾君 牧師
+FLAGS = flags.FLAGS
 
-"""
-## 主日敬拜
-"""
+FLAGS(["streamlit"])
 
-"""
-### 詩班獻詩
-"""
-choir = st.text_input("")
+citation = st.text_input("證道經文", "約翰福音14:25")
 
-"""
-### 敬拜詩歌
-"""
+if citation:
+    scriptures = Scripture(citation)
+    for _, verses in scriptures.cite_verses.items():
+        df = pd.DataFrame(verses)
+        df["chapter_verse"] = df["chapter"].astype(str) + ":" + df["verse"].astype(str)
+        df.set_index(["chapter_verse"], inplace=True)
+        styled = df[["text"]].style.applymap(lambda _: "text-align: left")
+        st.table(styled)
 
-# bible
+memorise = st.text_input("本週金句", "約翰福音3:16")
+if memorise:
+    scriptures = Scripture(memorise)
+    for _, verses in scriptures.cite_verses.items():
+        st.table(pd.DataFrame(verses).set_index(["book", "chapter", "verse"]))
 
-"""
-### 引用經文
-"""
-citation = st.text_input("")
 
-"""
-### 本週金句
-"""
-memorise = st.text_input("")
-
-"""
-### 傳講信息
-"""
-messenge = st.text_input("")
-
-"""
-### 證道牧師
-"""
-messenger = st.text_input("")
-
-"""
-### 擘餠喝杯
-"""
-communion = st.checkbox("")
-
+messenge = st.text_input("傳講信息")
+messenger = st.text_input("證道神仆")
+hymn_name = st.text_input("詩班獻詩", "真神羔羊")
+hymn = Hymn(hymn_name)
+st.write(hymn)
+communion = st.checkbox("擘餠喝杯")
 download = st.button("下載預覽")
