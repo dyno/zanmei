@@ -65,18 +65,18 @@ download: zanmei hoctoga hoc5 mvccc ibibles.net bible.cloud
 .PHONY: pptx
 # create slides for sunday service
 pptx:
-	$(PYTHON) slides.py $(OPT) --pptx=$(SUNDAY).pptx --flagfile=services/$(SUNDAY).flags
+	$(PYTHON) mvccc/slides.py $(OPT) --pptx=$(SUNDAY).pptx --flagfile=services/$(SUNDAY).flags
 slides:pptx
 
 .PHONY: pptx_to_text
 # extract text from a pptx file
 pptx_to_text:
 ifdef PPTX
-	$(PYTHON) slides.py --extract_only --pptx $(PPTX)
+	$(PYTHON) mvccc/slides.py --extract_only --pptx $(PPTX)
 endif
 
 streamlit:
-	$(WITH_VENV) streamlit run --server.port=5801 mvccc/slides.py
+	$(WITH_VENV) streamlit run --server.port=5801 mvccc/slidesapp.py
 
 #-------------------------------------------------------------------------------
 VERSES := 約翰福音3:16
