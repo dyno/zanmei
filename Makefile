@@ -75,8 +75,22 @@ ifdef PPTX
 	$(PYTHON) mvccc/slides.py --extract_only --pptx $(PPTX)
 endif
 
-streamlit:
-	$(WITH_VENV) streamlit run --server.port=5801 mvccc/slidesapp.py
+streamlit-slides:
+	$(WITH_VENV) streamlit run \
+	  --server.port=8501       \
+	  mvccc/slidesapp.py       \
+	  # END
+
+ipykernel:
+	$(WITH_VENV) python -m ipykernel install --user --name zanmei --display-name "python(zanmei)"
+
+notebook: ipykernel
+	$(WITH_VENV) jupyter notebook            \
+	  --NotebookApp.open_browser=False       \
+	  --NotebookApp.port=8088                \
+	  --NotebookApp.base_url='/notebook/'    \
+	  --NotebookApp.allow_remote_access=True \
+	# END
 
 #-------------------------------------------------------------------------------
 VERSES := 約翰福音3:16
