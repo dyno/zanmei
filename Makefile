@@ -92,9 +92,6 @@ notebook: ipykernel
 	  --NotebookApp.allow_remote_access=True \
 	# END
 
-ipykernel:
-	$(WITH_VENV) python -m ipykernel install --user --name zanmei --display-name "python(zanmei)"
-
 jupyter:
 	$(WITH_VENV) jupyter notebook
 
