@@ -1,9 +1,9 @@
 import pandas as pd
+import pytest
 from absl import flags
 
-import pytest
-from scripture import from_bible_cloud, from_ibibles_net
-from thebible import parse_citations
+from bible.index import parse_citations
+from bible.scripture import from_bible_cloud, from_ibibles_net
 
 FLAGS = flags.FLAGS
 

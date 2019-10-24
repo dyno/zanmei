@@ -118,7 +118,7 @@ scripture_compare:
 # development related
 
 test:
-	$(PYTHON) -m pytest --doctest-modules --capture=no --verbose
+	$(PYTHON) -m pytest --capture=no --verbose
 
 # Run individual unittest file, e.g.
 # 	make tests/bible/test_index.py

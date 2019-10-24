@@ -33,7 +33,7 @@ flags.DEFINE_bool("communion", None, "Whether to have communion")
 
 FLAGS = flags.FLAGS
 
-PROCESSED = Path("processed")
+PROCESSED = "processed"
 
 # ------------------------------------------------------------------------------
 
@@ -102,43 +102,10 @@ class Message:
 
 @attr.s
 class Hymn:
-    index: str = attr.ib()  # can be index number, hymn's title
-    lyrics: List[Tuple[str, List[str]]] = attr.ib(init=False)  # List[title, paragraph]
+    filename: str = attr.ib()  # can be index number, hymn's title
+    lyrics: List[Tuple[str, List[str]]] = attr.ib()  # List[title, paragraph]
 
-    def __attrs_post_init__(self):
-        ptn = f"**/*{self.index}*.pptx"
-        glob = PROCESSED.glob(ptn)
-        found = list(glob)
-
-        if not found:
-            # interchangeability characters
-            interchangebles = [("你", "祢", "袮"), ("寶", "寳"), ("他", "祂"), ("于", "於")]
-            for t in interchangebles:
-                for w in t:
-                    if w not in ptn:
-                        continue
-                    for w1 in t:
-                        if w == w1:
-                            continue
-                        glob = PROCESSED.glob(ptn.replace(w, w1))
-                        found = list(glob)
-                        if found:
-                            break
-
-        assert found, f"can not find anything match {ptn}."
-        if len(found) > 1:
-            log.warn(f"found more than 1 files for {ptn}. {[p.as_posix() for p in found]}")
-        for path in found:
-            if path.stem == self.index:
-                filepath = path.as_posix()
-                break
-        else:
-            filepath = found[0].as_posix()
-        ppt = Presentation(filepath)
-        self.lyrics = list(extract_slides_text(ppt))
-        log.info(f"index={self.index}, lyrics=\n{pformat(self.lyrics)}")
-
-    def add_to(self, ppt: Presentation, padding=" ") -> Presentation:
+    def add_to(self, ppt: Presentation, padding: str = " ") -> Presentation:
         for _, (title, paragraph) in self.lyrics:
             slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_HYMN])
             title_holder, paragraph_holder = slide.placeholders
@@ -148,6 +115,46 @@ class Hymn:
             paragraph_holder.text = "\n".join(paragraph)
 
         return ppt
+
+
+def search_hymn_ppt(keyword: str, basepath: Path = None) -> List[Hymn]:
+    if basepath is None:
+        basepath = Path(PROCESSED)
+
+    ptn = f"**/*{keyword}*.pptx"
+    glob = basepath.glob(ptn)
+    found = list(glob)
+
+    if not found:
+        # interchangeability characters
+        interchangebles = [("你", "祢", "袮"), ("寶", "寳"), ("他", "祂"), ("于", "於")]
+        for t in interchangebles:
+            for w in t:
+                if w not in ptn:
+                    continue
+                for w1 in t:
+                    if w == w1:
+                        continue
+                    glob = basepath.glob(ptn.replace(w, w1))
+                    found = list(glob)
+                    if found:
+                        break
+
+    assert found, f"can not find anything match {ptn}."
+    if len(found) > 1:
+        log.warn(f"found more than 1 files for {ptn}. {[p.as_posix() for p in found]}")
+
+    found = [path for path in found if path.stem == keyword] + [path for path in found if path.stem != keyword]
+
+    result: List[Hymn] = []
+    for path in found:
+        ppt = Presentation(path.as_posix())
+        lyrics = list(extract_slides_text(ppt))
+        hymn = Hymn(path.name, lyrics)
+        log.info(f"keyword={keyword}, lyrics=\n{pformat(hymn.lyrics)}")
+        result.append(hymn)
+
+    return result
 
 
 @attr.s
@@ -165,14 +172,7 @@ class Section:
 @attr.s
 class Scripture:
     citations: str = attr.ib()
-    cite_verses: Dict[str, List[BibleVerse]] = attr.ib(init=False)
-
-    def __attrs_post_init__(self):
-        bible = scripture()
-        result = bible.search(parse_citations(self.citations).items())
-        for cite, verses in result.items():
-            log.info(f"citation={cite}, verses=\n{pformat(verses)}")
-        self.cite_verses = result
+    cite_verses: Dict[str, List[BibleVerse]] = attr.ib()
 
     def add_to(self, ppt: Presentation, padding="  ") -> Presentation:
         for cite, verses in self.cite_verses.items():
@@ -186,19 +186,19 @@ class Scripture:
         return ppt
 
 
+def to_scripture(citations: str) -> Scripture:
+    bible = scripture()
+    cite_verses = bible.search(parse_citations(citations).items())
+    for cite, verses in cite_verses.items():
+        log.info(f"citation={cite}, verses=\n{pformat(verses)}")
+
+    return Scripture(citations, cite_verses)
+
+
 @attr.s
 class Memorize:
     citation: str = attr.ib()
-    verses: List[BibleVerse] = attr.ib(init=False)
-
-    def __attrs_post_init__(self):
-        bible = scripture()
-        book_citation_list = parse_citations(self.citation).items()
-        result = bible.search(book_citation_list)
-        assert len(result) == 1, "There should be only one citation for memorized verse"
-        for cite, verses in result.items():
-            log.info(f"citation={cite}, verses=\n{pformat(verses)}")
-            self.verses = verses
+    verses: List[BibleVerse] = attr.ib()
 
     def add_to(self, ppt: Presentation, padding="\u3000\u3000") -> Presentation:
         slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_MEMORIZE])
@@ -250,33 +250,41 @@ def mvccc_slides(
                     哈巴谷書 2:20"""
         ),
     ]
-    slides.append(Hymn("聖哉聖哉聖哉"))
+    hymn = search_hymn_ppt("聖哉聖哉聖哉")
+    slides.append(hymn[0])
 
     slides.append(Section("宣  召"))
 
     slides.append(Section("頌  讚"))
-    if hymns:
-        slides.extend(list(map(Hymn, hymns)))
+    for kw in hymns:
+        r = search_hymn_ppt(kw)
+        slides.append(r[0])
 
     slides.append(Section("祈  禱"))
 
     slides.append(Section("讀  經"))
-    slides.append(Scripture(scripture))
-    slides.append(Memorize(memorize))
+
+    slides.append(to_scripture(scripture))
+    for cite, verses in to_scripture(memorize).cite_verses.items():
+        slides.append(Memorize(cite, verses))
+        break
     slides.append(Blank())
 
     slides.append(Section("獻  詩"))
     if choir:
-        slides.append(Hymn(choir))
+        hymn = search_hymn_ppt(choir)[0]
+        slides.append(hymn)
 
     slides.append(Teaching("信息", f"「{message}」", f"{messager}"))
 
     slides.append(Section("回  應"))
     if response:
-        slides.append(Hymn(response))
+        hymn = search_hymn_ppt(response)[0]
+        slides.append(hymn)
 
     if offering:
-        slides.append(Hymn(offering))
+        hymn = search_hymn_ppt(offering)[0]
+        slides.append(hymn)
 
     slides.append(Section("奉 獻 禱 告"))
 
@@ -286,7 +294,8 @@ def mvccc_slides(
     slides.append(Section("歡 迎 您"))
     slides.append(Section("家 事 分 享"))
 
-    slides.append(Hymn("三一頌"))
+    hymn = search_hymn_ppt("三一頌")[0]
+    slides.append(hymn)
 
     slides.append(Section("祝  福"))
     slides.append(Section("默  禱"))
