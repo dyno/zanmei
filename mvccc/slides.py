@@ -39,7 +39,6 @@ PROCESSED = "processed"
 
 
 def next_sunday(today: date = None) -> str:
-    # FIXME: this function is not used.
     if today is None:
         today = date.today()
     sunday = today + timedelta(6 - today.weekday())
@@ -121,6 +120,7 @@ def search_hymn_ppt(keyword: str, basepath: Path = None) -> List[Hymn]:
     if basepath is None:
         basepath = Path(PROCESSED)
 
+    keyword = keyword.replace(".pptx", "")
     ptn = f"**/*{keyword}*.pptx"
     glob = basepath.glob(ptn)
     found = list(glob)
