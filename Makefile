@@ -76,9 +76,9 @@ ifdef PPTX
 endif
 
 streamlit-slides:
-	$(WITH_VENV) streamlit run \
-	  --server.port=8501       \
-	  mvccc/slidesapp.py       \
+	$(WITH_VENV) streamlit run           \
+	  --server.port=8501                 \
+	  mvccc/slidesapp.py                 \
 	  # END
 
 ipykernel:
