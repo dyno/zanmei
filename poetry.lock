@@ -770,7 +770,7 @@ category = "main"
 description = "C parser in Python"
 name = "pycparser"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+python-versions = "*"
 version = "2.19"
 
 [[package]]
@@ -877,7 +877,7 @@ category = "main"
 description = "YAML parser and emitter for Python"
 name = "pyyaml"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+python-versions = "*"
 version = "5.1.2"
 
 [[package]]
@@ -959,7 +959,7 @@ description = "Frontend library for machine learning engineers"
 name = "streamlit"
 optional = false
 python-versions = "*"
-version = "0.48.1"
+version = "0.49.0"
 
 [package.dependencies]
 altair = ">=3.2.0"
@@ -1172,7 +1172,7 @@ version = "0.6.0"
 more-itertools = "*"
 
 [metadata]
-content-hash = "a24ce211bbb493648ccf353abed3ee875c29eff7d052a52aa6c2bf1130824c1e"
+content-hash = "2a79da4cb597dc5aac900d8da598cbfbf39b3015401e989dffcc496e222a9ef7"
 python-versions = "^3.6"
 
 [metadata.hashes]
@@ -1264,7 +1264,7 @@ s3transfer = ["6efc926738a3cd576c2a79725fed9afde92378aa5c6a957e3af010cb019fac9d"
 send2trash = ["60001cc07d707fe247c94f74ca6ac0d3255aabcb930529690897ca2a39db28b2", "f1691922577b6fa12821234aeb57599d887c4900b9ca537948d2dac34aea888b"]
 six = ["3350809f0555b11f552448330d0b52d5f24c91a322ea4a15ef22629740f3761c", "d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73"]
 soupsieve = ["605f89ad5fdbfefe30cdc293303665eff2d188865d4dbe4eb510bba1edfbfce3", "b91d676b330a0ebd5b21719cb6e9b57c57d433671f65b9c28dd3461d9a1ed0b6"]
-streamlit = ["e2b78bae27fba241110ec5578262d83baecc55dd1089034c7388b5ce5c987cc5"]
+streamlit = ["6747cdb653d54ccbaaa7343912d187ae644aa1b66aa537dc63bb20e847fa22bc"]
 terminado = ["d9d012de63acb8223ac969c17c3043337c2fcfd28f3aea1ee429b345d01ef460", "de08e141f83c3a0798b050ecb097ab6259c3f0331b2f7b7750c9075ced2c20c2"]
 testpath = ["46c89ebb683f473ffe2aab0ed9f12581d4d078308a3cb3765d79c6b2317b0109", "b694b3d9288dbd81685c5d2e7140b81365d46c29f5db4bc659de5aa6b98780f8"]
 toml = ["229f81c57791a41d65e399fc06bf0848bab550a9dfd5ed66df18ce5f05e73d5c", "235682dd292d5899d361a811df37e04a8828a5b1da3115886b73cf81ebc9100e", "f1db651f9657708513243e61e6cc67d101a39bad662eaa9b5546f789338e07a3"]

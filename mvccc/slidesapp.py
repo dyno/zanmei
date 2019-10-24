@@ -1,12 +1,13 @@
 #!/usr/bin/env streamlit
 
+import hashlib
 from io import StringIO
 
 import pandas as pd
+import streamlit as st
 from absl import flags
 from pptx import Presentation
 
-import streamlit as st
 from mvccc.slides import Hymn, mvccc_slides, next_sunday, search_hymn_ppt, to_pptx, to_scripture
 
 FLAGS = flags.FLAGS
@@ -14,9 +15,11 @@ FLAGS = flags.FLAGS
 FLAGS(["streamlit"])
 
 
-def pick_hymn(keyword: str) -> Hymn:
+def pick_hymn(keyword: str, label: str) -> Hymn:
     hymns = search_hymn_ppt(keyword=keyword)
-    hymn = st.radio("", hymns, index=0, format_func=lambda h: h.filename)
+    hymn = st.radio(
+        "", hymns, index=0, format_func=lambda h: h.filename, key=hashlib.md5(label.encode("utf-8")).hexdigest()
+    )
     sio = StringIO()
     for _, (title, lines) in hymn.lyrics:
         sio.write(f"\n#{title[0].strip('#')}\n")
@@ -49,26 +52,30 @@ if memorise:
         st.table(pd.DataFrame(verses).set_index(["book", "chapter", "verse"]))
 
 choir = None
-keyword = st.text_input("詩班獻詩", "真神羔羊")
+label = "詩班獻詩"
+keyword = st.text_input(label, "真神羔羊")
 if keyword.strip():
-    choir = pick_hymn(keyword)
+    choir = pick_hymn(keyword, label=label)
 
 hymns = []
 for i in range(4):
-    keyword = st.text_input(f"敬拜赞美 - {i+1}", "耶和華")
+    label = f"敬拜赞美 - {i+1}"
+    keyword = st.text_input(label, "耶和華")
     if keyword.strip():
-        picked = pick_hymn(keyword)
+        picked = pick_hymn(keyword, label)
         hymns.append(picked)
 
 response = None
-keyword = st.text_input("回應詩歌", "耶和華你是我的神")
+label = "回應詩歌"
+keyword = st.text_input(label, "耶和華你是我的神")
 if keyword.strip():
-    response = pick_hymn(keyword)
+    response = pick_hymn(keyword, label)
 
 offering = None
-keyword = st.text_input("回應詩歌", "獻上感恩的心")
+label = "奉獻詩歌"
+keyword = st.text_input(label, "獻上感恩的心")
 if keyword.strip():
-    offering = pick_hymn(keyword)
+    offering = pick_hymn(keyword, label)
 
 coming_sunday = next_sunday()
 is_first_week = int(coming_sunday[-2]) + int(coming_sunday[-1]) <= 7
@@ -80,8 +87,8 @@ deck = mvccc_slides(
     memorize=memorise,
     message=message,
     messager=messager,
-    choir=offering.filename if offering else "",
-    response=offering.filename if offering else "",
+    choir=choir.filename if choir else "",
+    response=response.filename if response else "",
     offering=offering.filename if offering else "",
     communion=communion,
 )
