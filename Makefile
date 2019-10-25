@@ -76,11 +76,12 @@ ifdef PPTX
 endif
 
 streamlit-slides:
-	$(WITH_VENV) streamlit run           \
-	  --server.port=8501                 \
-	  mvccc/slidesapp.py                 \
-	  --server.baseUrlPath=/mvccc/slides \
+	$(WITH_VENV) streamlit run     \
+	  --server.port=8501           \
+	  mvccc/slidesapp.py           \
+	  --server.baseUrlPath=slides  \
 	  # END
+	  # https://github.com/streamlit/streamlit/issues/521
 
 ipykernel:
 	$(WITH_VENV) python -m ipykernel install --user --name zanmei --display-name "python(zanmei)"
