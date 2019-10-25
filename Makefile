@@ -79,7 +79,7 @@ streamlit-slides:
 	$(WITH_VENV) streamlit run           \
 	  --server.port=8501                 \
 	  mvccc/slidesapp.py                 \
-	  # --server.baseUrlPath=/mvccc/slides \
+	  --server.baseUrlPath=/mvccc/slides \
 	  # END
 
 ipykernel:
