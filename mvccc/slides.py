@@ -8,9 +8,9 @@ from pprint import pformat
 from typing import Dict, Generator, List, Tuple
 
 import attr
-from absl import app, flags, logging as log
 from pptx import Presentation
 
+from absl import app, flags, logging as log
 from bible.index import parse_citations
 from bible.scripture import BibleVerse, scripture
 
@@ -53,7 +53,7 @@ def extract_slides_text(ppt: Presentation) -> Generator[Tuple[int, List[List[str
                 continue
             paragraph_text_list: List[str] = []
             for paragraph in shape.text_frame.paragraphs:
-                paragraph_text_list.append("".join(run.text.replace("\xa0", " ") for run in paragraph.runs))
+                paragraph_text_list.append("".join(run.text.replace("\xa0", " ").strip() for run in paragraph.runs))
             while not paragraph_text_list[-1]:
                 paragraph_text_list.pop()
             shape_text_list.append(paragraph_text_list)
@@ -93,7 +93,7 @@ class Message:
 
     def add_to(self, ppt: Presentation, padding="\u3000\u3000") -> Presentation:
         slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_MESSAGE])
-        message, = slide.placeholders
+        (message,) = slide.placeholders
         message.text = padding + self.message
 
         return ppt
@@ -127,7 +127,7 @@ def search_hymn_ppt(keyword: str, basepath: Path = None) -> List[Hymn]:
 
     if not found:
         # interchangeability characters
-        interchangebles = [("你", "祢", "袮"), ("寶", "寳"), ("他", "祂"), ("于", "於")]
+        interchangebles = [("你", "祢", "袮"), ("寶", "寳"), ("他", "祂"), ("于", "於"), ("牆", "墻")]
         for t in interchangebles:
             for w in t:
                 if w not in ptn:
@@ -163,7 +163,7 @@ class Section:
 
     def add_to(self, ppt: Presentation) -> Presentation:
         slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_SECTION])
-        title, = slide.placeholders
+        (title,) = slide.placeholders
         title.text = self.title
 
         return ppt
@@ -217,7 +217,7 @@ class Teaching:
 
     def add_to(self, ppt: Presentation) -> Presentation:
         slide = ppt.slides.add_slide(ppt.slide_layouts[LAYOUT_TEACHING])
-        message, = slide.placeholders
+        (message,) = slide.placeholders
         message.text = "\n\n".join([self.title, self.message, self.messenger])
 
         return ppt
