@@ -73,6 +73,8 @@ slides:pptx
 pptx_to_text:
 ifdef PPTX
 	$(PYTHON) mvccc/slides.py --extract_only --pptx $(PPTX)
+else
+	echo "make pptx_to_text PPTX=xxx.pptx"
 endif
 
 streamlit-slides:
