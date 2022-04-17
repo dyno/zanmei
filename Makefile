@@ -136,7 +136,7 @@ install-poetry:
 
 .PHONY: poetry-config
 poetry-config:
-	poetry config settings.virtualenvs.in-project true
+	poetry config virtualenvs.in-project true
 
 .PHONY: poetry-install
 poetry-install: poetry-config

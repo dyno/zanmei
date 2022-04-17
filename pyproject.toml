@@ -5,7 +5,7 @@ description = "Download all resources for 'Hymns for God's People'"
 authors = ["Dyno Fu <dyno.fu@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.10"
 absl-py = "*"
 aiodns = "*"
 aiohttp = "*"
