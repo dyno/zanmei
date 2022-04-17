@@ -323,7 +323,9 @@ def main(argv):
         ppt = Presentation(FLAGS.pptx)
 
         for idx, text in extract_slides_text(ppt):
-            print(f"{idx+1:02d} {text}")
+            title = '\n'.join(text[0])
+            paragraph = '\n'.join(text[1])
+            print(f"{idx+1:02d} {title}\n{paragraph}\n")
         return
 
     slides = mvccc_slides(
